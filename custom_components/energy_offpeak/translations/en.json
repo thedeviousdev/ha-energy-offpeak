@@ -1,0 +1,44 @@
+{
+  "title": "Energy Off-Peak Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Energy Off-Peak Tracker",
+        "description": "Track energy imported outside a defined peak window.",
+        "data": {
+          "name": "Sensor name",
+          "source_entity": "Source energy sensor",
+          "peak_start": "Peak window start",
+          "peak_end": "Peak window end"
+        },
+        "data_description": {
+          "source_entity": "A cumulative kWh sensor that resets daily (e.g. sensor.today_energy_import)",
+          "peak_start": "Time when peak window begins (e.g. 11:00)",
+          "peak_end": "Time when peak window ends (e.g. 14:00)"
+        }
+      }
+    },
+    "error": {
+      "peak_start_after_end": "Peak start time must be earlier than peak end time."
+    },
+    "abort": {
+      "already_configured": "This source entity and peak window are already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Off-Peak Settings",
+        "data": {
+          "name": "Sensor name",
+          "source_entity": "Source energy sensor",
+          "peak_start": "Peak window start",
+          "peak_end": "Peak window end"
+        }
+      }
+    },
+    "error": {
+      "peak_start_after_end": "Peak start time must be earlier than peak end time."
+    }
+  }
+}
