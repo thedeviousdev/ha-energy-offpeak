@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.0.0...v1.1.0) (2026-02-22)
+
+
+### Features
+
+* add all inputs in one step ([78289f1](https://github.com/thedeviousdev/ha-energy-offpeak/commit/78289f10053dfc5c431d50a4dce82490ef1a1de9))
+* add all inputs in one step ([bb81559](https://github.com/thedeviousdev/ha-energy-offpeak/commit/bb815596f6814d612ddd568222aedd01bff6e915))
+
 ## 1.0.0 (2026-02-22)
 
 
