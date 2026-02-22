@@ -3,27 +3,47 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Energy Window Tracker",
-        "description": "Track energy consumed during specific time windows. Each window gets its own sensor showing energy used in that window.",
+        "title": "Select energy sensor",
+        "description": "Choose the cumulative energy sensor that resets daily (e.g. today's import).",
         "data": {
-          "name": "Sensor name prefix",
-          "source_entity": "Source energy sensor"
+          "source_entity": "Energy sensor"
         }
       },
-      "add_window": {
-        "title": "Add window",
-        "description": "Define a time window to track. Each window creates a sensor showing energy consumed during that window. Windows may overlap.",
+      "windows": {
+        "title": "Source name and windows",
+        "description": "Set the source name (defaults to the sensor name). Add windows: name, start time, end time per row. Leave a row with start = end to skip it. Click Submit when done.",
         "data": {
-          "start": "Window start time",
-          "end": "Window end time",
-          "name": "Window name (optional)",
-          "add_another": "Add another window"
+          "name": "Source name",
+          "w0_name": "Window 1 name",
+          "w0_start": "Window 1 start",
+          "w0_end": "Window 1 end",
+          "w1_name": "Window 2 name",
+          "w1_start": "Window 2 start",
+          "w1_end": "Window 2 end",
+          "w2_name": "Window 3 name",
+          "w2_start": "Window 3 start",
+          "w2_end": "Window 3 end",
+          "w3_name": "Window 4 name",
+          "w3_start": "Window 4 start",
+          "w3_end": "Window 4 end",
+          "w4_name": "Window 5 name",
+          "w4_start": "Window 5 start",
+          "w4_end": "Window 5 end",
+          "w5_name": "Window 6 name",
+          "w5_start": "Window 6 start",
+          "w5_end": "Window 6 end",
+          "w6_name": "Window 7 name",
+          "w6_start": "Window 7 start",
+          "w6_end": "Window 7 end",
+          "w7_name": "Window 8 name",
+          "w7_start": "Window 8 start",
+          "w7_end": "Window 8 end"
         }
       }
     },
     "error": {
       "window_start_after_end": "Window start time must be earlier than window end time.",
-      "at_least_one_window": "At least one window is required."
+      "at_least_one_window": "At least one window is required (start time before end time)."
     },
     "abort": {
       "already_configured": "This configuration is already set up."
@@ -31,14 +51,35 @@
   },
   "options": {
     "step": {
-      "add_window": {
-        "title": "Edit windows",
-        "description": "Add or replace windows. You will re-enter all windows you want to track.",
+      "init": {
+        "title": "Edit integration",
+        "description": "Change the source name and window times. Leave a row with start = end to remove it. Click Submit when done.",
         "data": {
-          "start": "Window start time",
-          "end": "Window end time",
-          "name": "Window name (optional)",
-          "add_another": "Add another window"
+          "name": "Source name",
+          "w0_name": "Window 1 name",
+          "w0_start": "Window 1 start",
+          "w0_end": "Window 1 end",
+          "w1_name": "Window 2 name",
+          "w1_start": "Window 2 start",
+          "w1_end": "Window 2 end",
+          "w2_name": "Window 3 name",
+          "w2_start": "Window 3 start",
+          "w2_end": "Window 3 end",
+          "w3_name": "Window 4 name",
+          "w3_start": "Window 4 start",
+          "w3_end": "Window 4 end",
+          "w4_name": "Window 5 name",
+          "w4_start": "Window 5 start",
+          "w4_end": "Window 5 end",
+          "w5_name": "Window 6 name",
+          "w5_start": "Window 6 start",
+          "w5_end": "Window 6 end",
+          "w6_name": "Window 7 name",
+          "w6_start": "Window 7 start",
+          "w6_end": "Window 7 end",
+          "w7_name": "Window 8 name",
+          "w7_start": "Window 8 start",
+          "w7_end": "Window 8 end"
         }
       }
     },
