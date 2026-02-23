@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
@@ -283,9 +283,7 @@ def _get_sources_from_entry(entry: config_entries.ConfigEntry) -> list[dict[str,
     return []
 
 
-# Action keys for options flow
-OPT_ACTION_ADD = "add"
-OPT_ACTION_DONE = "done"
+# Menu step ID suffixes for options flow
 OPT_ACTION_EDIT_PREFIX = "edit_"
 OPT_ACTION_DELETE_PREFIX = "delete_"
 
@@ -303,24 +301,33 @@ def _format_windows_list(windows: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def _build_manage_windows_schema(
-    source_entity: str,
-    windows: list[dict[str, Any]],
-) -> vol.Schema:
-    """Build init schema: source entity + action selector."""
-    options: dict[str, str] = {OPT_ACTION_ADD: "Add new window"}
+def _build_manage_menu_options(windows: list[dict[str, Any]]) -> list[str]:
+    """Build menu option step_ids: add_window first (as button), then edit/delete per window, then source_entity, save."""
+    options = ["add_window"]
+    for i in range(len(windows)):
+        options.append(f"{OPT_ACTION_EDIT_PREFIX}{i}")
+        options.append(f"{OPT_ACTION_DELETE_PREFIX}{i}")
+    options.extend(["source_entity", "save"])
+    return options
+
+
+def _build_menu_description_placeholders(windows: list[dict[str, Any]]) -> dict[str, str]:
+    """Build description_placeholders for menu option labels: edit_N_name and delete_N_name from window names."""
+    placeholders: dict[str, str] = {}
     for i, w in enumerate(windows):
         name = (w.get(CONF_WINDOW_NAME) or w.get("name") or "").strip() or f"Window {i + 1}"
-        options[f"{OPT_ACTION_EDIT_PREFIX}{i}"] = f"Edit: {name}"
-        options[f"{OPT_ACTION_DELETE_PREFIX}{i}"] = f"Delete: {name}"
-    options[OPT_ACTION_DONE] = "Save and close"
+        placeholders[f"{OPT_ACTION_EDIT_PREFIX}{i}_name"] = name
+        placeholders[f"{OPT_ACTION_DELETE_PREFIX}{i}_name"] = name
+    return placeholders
 
+
+def _build_source_entity_schema(source_entity: str) -> vol.Schema:
+    """Build schema for changing the source entity."""
     return vol.Schema({
         vol.Required(
             CONF_SOURCE_ENTITY,
             default=source_entity or "sensor.today_energy_import",
         ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
-        vol.Required("action", default=OPT_ACTION_DONE): vol.In(options),
     })
 
 
@@ -380,58 +387,100 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             )
             raise
 
+    def _async_show_menu(
+        self,
+        step_id: str,
+        menu_options: list[str],
+        description_placeholders: dict[str, str] | None = None,
+    ) -> config_entries.FlowResult:
+        """Show a menu step (each option is a button that goes to that step)."""
+        result: config_entries.FlowResult = {
+            "type": data_entry_flow.FlowResultType.MENU,
+            "flow_id": self.flow_id,
+            "handler": self.handler,
+            "step_id": step_id,
+            "menu_options": menu_options,
+        }
+        if description_placeholders:
+            result["description_placeholders"] = description_placeholders
+        return result
+
     async def _async_step_manage_impl(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Main manage form: source entity + action selector."""
+        """Show Manage Windows menu: Add new window (button), Edit/Delete per window, Change source, Save."""
+        src = self._get_current_source()
+        source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
+        windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
+
+        menu_options = _build_manage_menu_options(windows)
+        description_placeholders: dict[str, str] = {
+            "windows_list": _format_windows_list(windows) or "_No windows yet. Use Add new window._",
+        }
+        description_placeholders.update(_build_menu_description_placeholders(windows))
+        return self._async_show_menu(
+            step_id="init",
+            menu_options=menu_options,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_save(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Save and close (from menu)."""
+        src = self._get_current_source()
+        source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
+        windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
+        self._save_source(source_entity, windows)
+        return self.async_create_entry(title="", data={CONF_SOURCES: [{
+            CONF_NAME: _get_entity_friendly_name(self.hass, source_entity),
+            CONF_SOURCE_ENTITY: source_entity,
+            CONF_WINDOWS: windows,
+        }]})
+
+    async def async_step_source_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Change the source entity (form), then return to menu."""
         src = self._get_current_source()
         source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
 
         if user_input is not None:
-            source_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
-            if not source_entity:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=_build_manage_windows_schema(source_entity, windows),
-                    description_placeholders={
-                        "windows_list": _format_windows_list(windows),
-                    },
-                    errors={"base": "source_entity_required"},
-                )
-            action = user_input.get("action") or OPT_ACTION_DONE
+            new_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
+            if new_entity:
+                self._save_source(new_entity, windows)
+            return await self._async_step_manage_impl(None)
 
-            if action == OPT_ACTION_ADD:
-                return await self.async_step_add_window()
+        return self.async_show_form(
+            step_id="source_entity",
+            data_schema=_build_source_entity_schema(source_entity),
+        )
 
-            if action == OPT_ACTION_DONE:
-                self._save_source(source_entity, windows)
-                return self.async_create_entry(title="", data={CONF_SOURCES: [{
-                    CONF_NAME: _get_entity_friendly_name(self.hass, source_entity),
-                    CONF_SOURCE_ENTITY: source_entity,
-                    CONF_WINDOWS: windows,
-                }]})
+    def __getattr__(self, name: str) -> Any:
+        """Provide async_step_edit_N and async_step_delete_N for menu (N = window index)."""
+        if name.startswith("async_step_edit_") and name[16:].isdigit():
+            idx = int(name[16:], 10)
 
-            if action.startswith(OPT_ACTION_EDIT_PREFIX):
-                idx = int(action[len(OPT_ACTION_EDIT_PREFIX):], 10)
-                if 0 <= idx < len(windows):
-                    self._edit_index = idx
-                    return await self.async_step_edit_window(None)
+            async def _edit_step(user_input: dict[str, Any] | None) -> config_entries.FlowResult:
+                self._edit_index = idx
+                return await self.async_step_edit_window(user_input)
 
-            if action.startswith(OPT_ACTION_DELETE_PREFIX):
-                idx = int(action[len(OPT_ACTION_DELETE_PREFIX):], 10)
+            return _edit_step
+        if name.startswith("async_step_delete_") and name[18:].isdigit():
+            idx = int(name[18:], 10)
+
+            async def _delete_step(user_input: dict[str, Any] | None) -> config_entries.FlowResult:
+                src = self._get_current_source()
+                source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
+                windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
                 if 0 <= idx < len(windows):
                     new_windows = [w for i, w in enumerate(windows) if i != idx]
                     self._save_source(source_entity, new_windows)
-                    return await self._async_step_manage_impl(None)
+                return await self._async_step_manage_impl(None)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=_build_manage_windows_schema(source_entity, windows),
-            description_placeholders={
-                "windows_list": _format_windows_list(windows) or "_No windows yet. Add one below._",
-            },
-        )
+            return _delete_step
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
     async def async_step_add_window(
         self, user_input: dict[str, Any] | None = None
