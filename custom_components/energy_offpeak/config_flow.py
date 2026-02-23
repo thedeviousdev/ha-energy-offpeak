@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import logging
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -24,22 +26,39 @@ from .const import (
     DOMAIN,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
+# Only accept HH:MM or H:MM so schema defaults are always valid
+_RE_HHMM = re.compile(r"^(\d{1,2}):(\d{2})$")
+
 
 def _time_to_str(t: Any) -> str:
-    """Convert time object or string to HH:MM format. Never raises."""
+    """Convert time object or string to HH:MM format. Never raises. Invalid -> 00:00."""
+    def valid(s: str) -> str:
+        s = (s or "").strip()
+        if _RE_HHMM.match(s):
+            parts = s.split(":")
+            h, m = int(parts[0], 10), int(parts[1], 10)
+            if 0 <= h <= 23 and 0 <= m <= 59:
+                return f"{h:02d}:{m:02d}"
+        return "00:00"
+
     try:
         if t is None:
             return "00:00"
+        if isinstance(t, str):
+            return valid(t)
+        if isinstance(t, dict):
+            h = t.get("hour", t.get("hours", 0))
+            m = t.get("minute", t.get("minutes", 0))
+            return f"{int(h) % 24:02d}:{int(m) % 60:02d}"
         if hasattr(t, "strftime"):
-            return t.strftime("%H:%M")
+            return valid(t.strftime("%H:%M"))
         if hasattr(t, "hour") and hasattr(t, "minute"):
             return f"{int(t.hour):02d}:{int(t.minute):02d}"
-        if isinstance(t, str):
-            s = t.strip()[:5]
-            return s if len(s) >= 5 else "00:00"
-        s = str(t).strip()[:5]
-        return s if len(s) >= 5 else "00:00"
-    except (TypeError, ValueError, AttributeError):
+        return valid(str(t))
+    except (TypeError, ValueError, AttributeError, KeyError):
         return "00:00"
 
 
@@ -271,6 +290,19 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         """Single step: source name + dynamic window rows (existing + 1, no cap)."""
+        try:
+            return await self._async_step_init_impl(user_input)
+        except Exception as err:
+            _LOGGER.exception(
+                "Energy Window Tracker options flow failed: %s. Check traceback above.",
+                err,
+            )
+            raise
+
+    async def _async_step_init_impl(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Implementation of init step (wrapped for logging)."""
         options = self.config_entry.options or {}
         current = {**self.config_entry.data, **options}
         source_entity = current.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import"
@@ -279,7 +311,12 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             existing = []
         # Always show at least 2 rows so there is always an "add another" row
         num_rows = max(2, min(len(existing) + 1, 30))
-        default_name = current.get(CONF_NAME) or _get_entity_friendly_name(self.hass, source_entity)
+        default_name = current.get(CONF_NAME) or _get_entity_friendly_name(
+            self.hass, source_entity
+        )
+        if default_name is None:
+            default_name = DEFAULT_NAME
+        default_name = str(default_name)
 
         if user_input is not None:
             windows = _collect_windows_from_input(user_input, num_rows)
