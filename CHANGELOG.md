@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.4.2...v1.5.0) (2026-02-23)
+
+
+### Features
+
+* update entity strategy ([678494a](https://github.com/thedeviousdev/ha-energy-offpeak/commit/678494a18ab77eb9c12f74d0db2cda8280f3113d))
+* update entity strategy ([3b06164](https://github.com/thedeviousdev/ha-energy-offpeak/commit/3b061646499727adf9411901d250c488f056fc19))
+
+
+### Bug Fixes
+
+* add logging to api ([8dd6667](https://github.com/thedeviousdev/ha-energy-offpeak/commit/8dd66676f9129dd363d53fa9041f1e1cee80e2c2))
+
 ## [1.4.2](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.4.1...v1.4.2) (2026-02-23)
 
 
