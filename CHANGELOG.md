@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.1](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.5.0...v1.5.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* failing window validation ([0fda517](https://github.com/thedeviousdev/ha-energy-offpeak/commit/0fda5179e3658316637a942df40a06a7a8f8455d))
+* failing window validation ([0fda517](https://github.com/thedeviousdev/ha-energy-offpeak/commit/0fda5179e3658316637a942df40a06a7a8f8455d))
+* failing window validation ([8a6e8e2](https://github.com/thedeviousdev/ha-energy-offpeak/commit/8a6e8e224cacbecc653d1c749c8c525cd73d2080))
+
 ## [1.5.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.4.2...v1.5.0) (2026-02-23)
 
 
