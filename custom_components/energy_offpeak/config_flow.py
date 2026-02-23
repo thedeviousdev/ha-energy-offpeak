@@ -37,6 +37,11 @@ def _time_to_str(t: Any) -> str:
     """Convert time object or string to HH:MM format. Never raises. Invalid -> 00:00."""
     def valid(s: str) -> str:
         s = (s or "").strip()
+        # Accept HH:MM:SS or HH:MM (e.g. frontend may send 09:00:00 or 9:00:00)
+        if s.count(":") >= 2:
+            s = s.rsplit(":", 1)[0]  # drop seconds: "09:00:00" -> "09:00", "9:00:00" -> "9:00"
+        elif len(s) > 5:
+            s = s[:5]
         if _RE_HHMM.match(s):
             parts = s.split(":")
             h, m = int(parts[0], 10), int(parts[1], 10)
