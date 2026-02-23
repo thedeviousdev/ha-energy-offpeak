@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.4.0...v1.4.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* flow not allowing multiple entries ([d2664a7](https://github.com/thedeviousdev/ha-energy-offpeak/commit/d2664a75588d33e76651e794e120bb8fec45b4c5))
+* flow not allowing multiple entries ([2887742](https://github.com/thedeviousdev/ha-energy-offpeak/commit/2887742b83618ea87366c95ec9d8fc472a6ed5e8))
+
 ## [1.4.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.3.0...v1.4.0) (2026-02-23)
 
 
