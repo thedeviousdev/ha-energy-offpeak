@@ -88,7 +88,7 @@ def _normalize_windows_for_schema(raw: Any) -> list[dict[str, str]]:
     if not isinstance(raw, list):
         return out
     for i, item in enumerate(raw):
-        if i >= 30:
+        if i >= MAX_WINDOWS:
             break
         if not isinstance(item, dict):
             continue
@@ -283,7 +283,8 @@ def _get_sources_from_entry(entry: config_entries.ConfigEntry) -> list[dict[str,
     return []
 
 
-# Menu step ID suffixes for options flow
+# Menu step ID suffixes for options flow (max windows; translation keys are generated for 0..MAX_WINDOWS-1)
+MAX_WINDOWS = 30
 OPT_ACTION_EDIT_PREFIX = "edit_"
 OPT_ACTION_DELETE_PREFIX = "delete_"
 
@@ -301,24 +302,19 @@ def _format_windows_list(windows: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def _build_manage_menu_options(windows: list[dict[str, Any]]) -> list[str]:
-    """Build menu option step_ids: add_window first (as button), then edit/delete per window, then source_entity, save."""
-    options = ["add_window"]
-    for i in range(len(windows)):
-        options.append(f"{OPT_ACTION_EDIT_PREFIX}{i}")
-        options.append(f"{OPT_ACTION_DELETE_PREFIX}{i}")
-    options.extend(["source_entity", "save"])
-    return options
+def _build_manage_menu_options(_windows: list[dict[str, Any]]) -> list[str]:
+    """Build main menu option step_ids: add_window, manage_windows, source_entity."""
+    return ["add_window", "manage_windows", "source_entity"]
 
 
-def _build_menu_description_placeholders(windows: list[dict[str, Any]]) -> dict[str, str]:
-    """Build description_placeholders for menu option labels: edit_N_name and delete_N_name from window names."""
-    placeholders: dict[str, str] = {}
+def _build_manage_windows_menu_options(windows: list[dict[str, Any]]) -> dict[str, str]:
+    """Build sub-menu options as step_id -> label (dynamic from window names). Frontend uses as Record, no translation keys needed."""
+    options: dict[str, str] = {}
     for i, w in enumerate(windows):
         name = (w.get(CONF_WINDOW_NAME) or w.get("name") or "").strip() or f"Window {i + 1}"
-        placeholders[f"{OPT_ACTION_EDIT_PREFIX}{i}_name"] = name
-        placeholders[f"{OPT_ACTION_DELETE_PREFIX}{i}_name"] = name
-    return placeholders
+        options[f"{OPT_ACTION_EDIT_PREFIX}{i}"] = name
+        options[f"{OPT_ACTION_DELETE_PREFIX}{i}"] = f"Delete {name}"
+    return options
 
 
 def _build_source_entity_schema(source_entity: str) -> vol.Schema:
@@ -353,6 +349,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         super().__init__()
         self._config_entry = config_entry
         self._edit_index: int = 0
+        self._delete_index: int = -1
 
     def _get_current_source(self) -> dict[str, Any]:
         """Get current source from entry."""
@@ -390,10 +387,10 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     def _async_show_menu(
         self,
         step_id: str,
-        menu_options: list[str],
+        menu_options: list[str] | dict[str, str],
         description_placeholders: dict[str, str] | None = None,
     ) -> config_entries.FlowResult:
-        """Show a menu step (each option is a button that goes to that step)."""
+        """Show a menu step. menu_options: list of step_ids (labels from translation) or dict step_id->label (dynamic, no translation)."""
         result: config_entries.FlowResult = {
             "type": data_entry_flow.FlowResultType.MENU,
             "flow_id": self.flow_id,
@@ -408,7 +405,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     async def _async_step_manage_impl(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Show Manage Windows menu: Add new window (button), Edit/Delete per window, Change source, Save."""
+        """Show Manage Windows menu: Add new window, Edit/Delete per window, Change source. Close via dialog Back."""
         src = self._get_current_source()
         source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
@@ -417,26 +414,60 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         description_placeholders: dict[str, str] = {
             "windows_list": _format_windows_list(windows) or "_No windows yet. Use Add new window._",
         }
-        description_placeholders.update(_build_menu_description_placeholders(windows))
         return self._async_show_menu(
             step_id="init",
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
 
-    async def async_step_save(
+    async def _async_step_manage_windows_impl(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Save and close (from menu)."""
+        """Show Manage windows sub-menu: list of windows (by name) to edit or delete."""
+        src = self._get_current_source()
+        windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
+        if not windows:
+            if user_input is not None:
+                return await self._async_step_manage_impl(None)
+            return self.async_show_form(
+                step_id="manage_windows_empty",
+                data_schema=vol.Schema({}),
+            )
+        menu_options = _build_manage_windows_menu_options(windows)
+        return self._async_show_menu(
+            step_id="manage_windows",
+            menu_options=menu_options,
+        )
+
+    async def async_step_manage_windows(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Entry from main menu: show Manage windows list or empty state."""
+        return await self._async_step_manage_windows_impl(user_input)
+
+    async def async_step_confirm_delete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Confirm deletion of the window at _delete_index, then return to menu."""
         src = self._get_current_source()
         source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
-        self._save_source(source_entity, windows)
-        return self.async_create_entry(title="", data={CONF_SOURCES: [{
-            CONF_NAME: _get_entity_friendly_name(self.hass, source_entity),
-            CONF_SOURCE_ENTITY: source_entity,
-            CONF_WINDOWS: windows,
-        }]})
+        idx = self._delete_index
+        if idx < 0 or idx >= len(windows):
+            return await self._async_step_manage_windows_impl(None)
+        window_name = (
+            (windows[idx].get(CONF_WINDOW_NAME) or windows[idx].get("name") or "").strip()
+            or f"Window {idx + 1}"
+        )
+        if user_input is not None:
+            new_windows = [w for i, w in enumerate(windows) if i != idx]
+            self._save_source(source_entity, new_windows)
+            return await self._async_step_manage_windows_impl(None)
+        return self.async_show_form(
+            step_id="confirm_delete",
+            data_schema=vol.Schema({}),
+            description_placeholders={"window_name": window_name},
+        )
 
     async def async_step_source_entity(
         self, user_input: dict[str, Any] | None = None
@@ -471,13 +502,8 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             idx = int(name[18:], 10)
 
             async def _delete_step(user_input: dict[str, Any] | None) -> config_entries.FlowResult:
-                src = self._get_current_source()
-                source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
-                windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
-                if 0 <= idx < len(windows):
-                    new_windows = [w for i, w in enumerate(windows) if i != idx]
-                    self._save_source(source_entity, new_windows)
-                return await self._async_step_manage_impl(None)
+                self._delete_index = idx
+                return await self.async_step_confirm_delete(user_input)
 
             return _delete_step
         raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
@@ -522,7 +548,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         edit_index = self._edit_index
 
         if edit_index < 0 or edit_index >= len(windows):
-            return await self._async_step_manage_impl(None)
+            return await self._async_step_manage_windows_impl(None)
 
         if user_input is not None:
             start = _time_to_str(user_input.get("w0_start", "00:00"))
@@ -542,7 +568,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                 CONF_WINDOW_NAME: name,
             }
             self._save_source(source_entity, windows)
-            return await self._async_step_manage_impl(None)
+            return await self._async_step_manage_windows_impl(None)
 
         return self.async_show_form(
             step_id="edit_window",
