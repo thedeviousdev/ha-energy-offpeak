@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.7.0...v1.8.0) (2026-02-23)
+
+
+### Features
+
+* windows on their own page ([#34](https://github.com/thedeviousdev/ha-energy-offpeak/issues/34)) ([78e5425](https://github.com/thedeviousdev/ha-energy-offpeak/commit/78e5425d89500f0ab15a3bac0ad08c6434a0cb57))
+
 ## [1.7.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.6.2...v1.7.0) (2026-02-23)
 
 
