@@ -349,7 +349,8 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow: add / edit / remove sources under one entry."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        super().__init__(config_entry)
+        super().__init__()
+        self._config_entry = config_entry
 
     def _menu_choices(self, sources: list) -> list[tuple[str, str]]:
         """Build menu options: Add, Edit each source, Done."""
@@ -377,7 +378,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     async def _async_step_init_impl(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        sources = _get_sources_from_entry(self.config_entry)
+        sources = _get_sources_from_entry(self._config_entry)
         if user_input is not None:
             menu = user_input.get("menu", "")
             if menu == "done":
@@ -398,7 +399,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                         errors={"base": "at_least_one_source"},
                     )
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry,
+                    self._config_entry,
                     options={CONF_SOURCES: sources},
                 )
                 return self.async_create_entry(title="", data={CONF_SOURCES: sources})
@@ -431,7 +432,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         """Form: entity + name + window rows for a new source."""
-        sources = _get_sources_from_entry(self.config_entry)
+        sources = _get_sources_from_entry(self._config_entry)
         num_rows = max(2, 10)
         default_name = str(DEFAULT_NAME)[:200]
 
@@ -467,7 +468,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             }
             sources = list(sources) + [new_source]
             self.hass.config_entries.async_update_entry(
-                self.config_entry,
+                self._config_entry,
                 options={CONF_SOURCES: sources},
             )
             return await self._async_step_init_impl(user_input=None)
@@ -482,7 +483,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     ) -> config_entries.FlowResult:
         """Form: name + window rows for an existing source (entity fixed)."""
         source_index = int(self.context.get("source_index", 0))
-        sources = _get_sources_from_entry(self.config_entry)
+        sources = _get_sources_from_entry(self._config_entry)
         if source_index < 0 or source_index >= len(sources):
             return await self._async_step_init_impl(user_input=None)
         src = sources[source_index]
@@ -522,7 +523,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                 CONF_WINDOWS: windows,
             }
             self.hass.config_entries.async_update_entry(
-                self.config_entry,
+                self._config_entry,
                 options={CONF_SOURCES: new_sources},
             )
             return await self._async_step_init_impl(user_input=None)
