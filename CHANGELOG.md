@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.4](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.5.3...v1.5.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* single source ([#24](https://github.com/thedeviousdev/ha-energy-offpeak/issues/24)) ([5473ac0](https://github.com/thedeviousdev/ha-energy-offpeak/commit/5473ac0dffd9cc2517218b09ec8aa1507666ac2f))
+
 ## [1.5.3](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.5.2...v1.5.3) (2026-02-23)
 
 
