@@ -3,10 +3,10 @@
   "config": {
     "step": {
       "user": {
-        "title": "Select energy source",
-        "description": "Select an energy source that resets daily (e.g. today's import).",
+        "title": "Select sensor",
+        "description": "Select an energy source that resets daily (e.g. today's import)",
         "data": {
-          "source_entity": "Energy source"
+          "source_entity": "Sensor"
         },
         "data_description": {
           "source_entity": "Cumulative kWh sensor that resets daily (e.g. sensor.today_load)."
