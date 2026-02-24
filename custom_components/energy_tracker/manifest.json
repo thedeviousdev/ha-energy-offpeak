@@ -1,5 +1,5 @@
 {
-  "domain": "energy_offpeak",
+  "domain": "energy_tracker",
   "name": "Energy Tracker",
   "version": "1.11.0",
   "documentation": "https://github.com/thedeviousdev/ha-energy-tracker",
