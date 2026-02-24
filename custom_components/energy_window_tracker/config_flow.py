@@ -566,7 +566,8 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         ).strip() or f"Window {idx + 1}"
         if user_input is not None:
             new_windows = [w for i, w in enumerate(windows) if i != idx]
-            self._save_source(source_entity, new_windows)
+            current_name = src.get(CONF_NAME) or None
+            self._save_source(source_entity, new_windows, source_name=current_name)
             return await self._async_step_manage_windows_impl(None)
         return self.async_show_form(
             step_id="confirm_delete",
@@ -644,7 +645,8 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                 CONF_WINDOW_NAME: name,
             }
             windows.append(new_window)
-            self._save_source(source_entity, windows)
+            current_name = src.get(CONF_NAME) or None
+            self._save_source(source_entity, windows, source_name=current_name)
             return await self._async_step_manage_impl(None)
 
         return self.async_show_form(
@@ -689,7 +691,8 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                 CONF_WINDOW_END: end,
                 CONF_WINDOW_NAME: name,
             }
-            self._save_source(source_entity, windows)
+            current_name = src.get(CONF_NAME) or None
+            self._save_source(source_entity, windows, source_name=current_name)
             return await self._async_step_manage_windows_impl(None)
 
         return self.async_show_form(
