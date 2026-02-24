@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.3](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.10.2...v1.10.3) (2026-02-24)
+
+
+### Bug Fixes
+
+* update strings ([#49](https://github.com/thedeviousdev/ha-energy-offpeak/issues/49)) ([f602ba9](https://github.com/thedeviousdev/ha-energy-offpeak/commit/f602ba9cfc40e2715169856ff396ac9039b8d029))
+
 ## [1.10.2](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.10.1...v1.10.2) (2026-02-24)
 
 
