@@ -289,31 +289,26 @@ OPT_ACTION_EDIT_PREFIX = "edit_"
 OPT_ACTION_DELETE_PREFIX = "delete_"
 
 
-def _format_windows_list(windows: list[dict[str, Any]]) -> str:
-    """Format windows as markdown list for description."""
-    if not windows:
-        return ""
-    lines = []
-    for i, w in enumerate(windows):
-        name = (w.get(CONF_WINDOW_NAME) or w.get("name") or "").strip() or f"Window {i + 1}"
-        start = _time_to_str(w.get(CONF_WINDOW_START) or w.get("start"))
-        end = _time_to_str(w.get(CONF_WINDOW_END) or w.get("end"))
-        lines.append(f"- **{name}** ({start} – {end})")
-    return "\n".join(lines)
-
-
 def _build_manage_menu_options(_windows: list[dict[str, Any]]) -> list[str]:
-    """Build main menu option step_ids: add_window, manage_windows, source_entity."""
-    return ["add_window", "manage_windows", "source_entity"]
+    """Build main menu option step_ids: add_window, list_windows, source_entity. (list_windows avoids translation clash with step manage_windows.)"""
+    return ["add_window", "list_windows", "source_entity"]
+
+
+def _build_windows_headers_description(windows: list[dict[str, Any]]) -> str:
+    """Build description with each window name as a header (## Name), then Edit/Delete menu items follow in order."""
+    headers = []
+    for w in windows:
+        name = (w.get(CONF_WINDOW_NAME) or w.get("name") or "").strip() or "Window"
+        headers.append(f"## {name}")
+    return "\n\n".join(headers) + "\n\n" if headers else ""
 
 
 def _build_manage_windows_menu_options(windows: list[dict[str, Any]]) -> dict[str, str]:
-    """Build sub-menu options as step_id -> label (dynamic from window names). Frontend uses as Record, no translation keys needed."""
+    """Build sub-menu: for each window, Edit then Delete (labels fixed). Order matches _build_windows_headers_description."""
     options: dict[str, str] = {}
-    for i, w in enumerate(windows):
-        name = (w.get(CONF_WINDOW_NAME) or w.get("name") or "").strip() or f"Window {i + 1}"
-        options[f"{OPT_ACTION_EDIT_PREFIX}{i}"] = name
-        options[f"{OPT_ACTION_DELETE_PREFIX}{i}"] = f"Delete {name}"
+    for i in range(len(windows)):
+        options[f"{OPT_ACTION_EDIT_PREFIX}{i}"] = "Edit"
+        options[f"{OPT_ACTION_DELETE_PREFIX}{i}"] = "Delete"
     return options
 
 
@@ -411,13 +406,9 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
 
         menu_options = _build_manage_menu_options(windows)
-        description_placeholders: dict[str, str] = {
-            "windows_list": _format_windows_list(windows) or "_No windows yet. Use Add new window._",
-        }
         return self._async_show_menu(
             step_id="init",
             menu_options=menu_options,
-            description_placeholders=description_placeholders,
         )
 
     async def _async_step_manage_windows_impl(
@@ -434,15 +425,25 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                 data_schema=vol.Schema({}),
             )
         menu_options = _build_manage_windows_menu_options(windows)
+        description_placeholders = {
+            "windows_headers": _build_windows_headers_description(windows),
+        }
         return self._async_show_menu(
             step_id="manage_windows",
             menu_options=menu_options,
+            description_placeholders=description_placeholders,
         )
+
+    async def async_step_list_windows(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Entry from main menu (menu option 'Manage windows'): show list or empty state."""
+        return await self._async_step_manage_windows_impl(user_input)
 
     async def async_step_manage_windows(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Entry from main menu: show Manage windows list or empty state."""
+        """Show Manage windows list or empty state (e.g. when returning from edit/delete)."""
         return await self._async_step_manage_windows_impl(user_input)
 
     async def async_step_confirm_delete(

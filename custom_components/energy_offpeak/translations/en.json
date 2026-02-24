@@ -39,16 +39,16 @@
     "step": {
       "init": {
         "title": "Manage Windows",
-        "description": "---\n\n## Windows\n\n{windows_list}\n\nSelect an action below.",
+        "description": "Select an action below.",
         "menu_options": {
           "add_window": "Add new window",
-          "manage_windows": "Manage windows",
+          "list_windows": "Manage windows",
           "source_entity": "Change source entity"
         }
       },
       "manage_windows": {
         "title": "Manage windows",
-        "description": "Select a window to edit or delete."
+        "description": "{windows_headers}Select an action below."
       },
       "manage_windows_empty": {
         "title": "Manage windows",
