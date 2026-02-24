@@ -428,7 +428,8 @@ class WindowEnergySensor(RestoreSensor):
     def _handle_data_update(self) -> None:
         self._update_value()
         if self.entity_id:
-            self.async_write_ha_state()
+            # Must run on event loop; callback can be invoked from another thread (e.g. time_change)
+            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     def _update_value(self) -> None:
         value, status = self._data.get_window_value(self._window)
