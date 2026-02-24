@@ -460,8 +460,6 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="manage_windows",
             data_schema=_build_select_window_schema(windows),
-            description="Select a window to edit or delete.",
-            title="Configure Windows",
         )
 
     async def async_step_list_windows(
