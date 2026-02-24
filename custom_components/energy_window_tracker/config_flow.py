@@ -1,4 +1,4 @@
-"""Config flow for Energy Tracker."""
+"""Config flow for Energy Window Tracker."""
 
 from __future__ import annotations
 
@@ -224,7 +224,7 @@ def _get_window_rows_from_input(data: dict, num_rows: int) -> list[dict[str, Any
 
 
 class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Energy Tracker."""
+    """Handle a config flow for Energy Window Tracker."""
 
     VERSION = 1
 
@@ -250,7 +250,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         isinstance(src, dict)
                         and src.get(CONF_SOURCE_ENTITY) == source_entity
                     ):
-                        entry_title = entry.title or "Energy Tracker"
+                        entry_title = entry.title or "Energy Window Tracker"
                         return self.async_show_form(
                             step_id="user",
                             data_schema=_build_step_user_schema(),
@@ -301,9 +301,9 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
             source_name = (user_input.get("source_name") or "").strip() or _get_entity_friendly_name(self.hass, source_entity)
-            source_name = (source_name or "Energy Tracker").strip()[:200]
+            source_name = (source_name or "Energy Window Tracker").strip()[:200]
             # Entry title for "Integration entries": user-defined sensor name, or entity name, or default
-            entry_title = source_name or "Energy Tracker"
+            entry_title = source_name or "Energy Window Tracker"
             # Single entry for the whole integration: all sources live under this one entry
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
@@ -427,7 +427,7 @@ def _build_single_window_schema(
 
 
 class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
-    """Handle options flow: Configure Energy Tracker — add/edit/delete windows, change source."""
+    """Handle options flow: Configure Energy Window Tracker — add/edit/delete windows, change source."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         super().__init__()
@@ -466,12 +466,12 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Configure Energy Tracker: show menu (Add new window, Manage windows, Update energy source)."""
+        """Configure Energy Window Tracker: show menu (Add new window, Manage windows, Update energy source)."""
         try:
             return await self._async_step_manage_impl(user_input)
         except Exception as err:
             _LOGGER.exception(
-                "Energy Tracker options flow failed: %s",
+                "Energy Window Tracker options flow failed: %s",
                 err,
             )
             raise
@@ -503,7 +503,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     async def _async_step_manage_impl(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Show Configure Energy Tracker menu."""
+        """Show Configure Energy Window Tracker menu."""
         src = self._get_current_source()
         source_entity = str(src.get(CONF_SOURCE_ENTITY) or DEFAULT_SOURCE_ENTITY)
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
@@ -513,7 +513,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             menu_options=menu_options,
             description_placeholders={"windows_list": ""},
-            title="Configure Energy Tracker",
+            title="Configure Energy Window Tracker",
         )
 
     async def _async_step_manage_windows_impl(

@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "extra-files": ["custom_components/energy_tracker/manifest.json"]
+      "extra-files": ["custom_components/energy_window_tracker/manifest.json"]
     }
   }
 }

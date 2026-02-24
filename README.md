@@ -1,4 +1,4 @@
-# Energy Tracker
+# Energy Window Tracker
 
 Custom integration for Home Assistant that allows tracking custom windows of energy.
 
@@ -18,12 +18,12 @@ Snapshots of the current energy consumption are taken at the **start** and **end
 
 1. Open HACS → Integrations → ⋮ → Custom repositories
 2. Add this repo URL, category **Integration**
-3. Install **Energy Tracker**
+3. Install **Energy Window Tracker**
 4. Restart Home Assistant
 
 ### Manual
 
-1. Copy the `custom_components/energy_tracker/` folder into your HA `config/custom_components/` directory
+1. Copy the `custom_components/energy_window_tracker/` folder into your HA `config/custom_components/` directory
 2. Restart Home Assistant
 
 ## Updating
@@ -34,19 +34,19 @@ After updating the integration (via HACS or by replacing files), **restart Home 
 
 Each integration entry has **one energy source** and can have **many time windows**.
 
-> **No duplicate sensors.** You cannot have two Energy Tracker entries that use the same energy sensor. Each sensor can only be linked to one entry. To add more windows for that sensor, use **⚙️ Configure** on its entry.
+> **No duplicate sensors.** You cannot have two Energy Window Tracker entries that use the same energy sensor. Each sensor can only be linked to one entry. To add more windows for that sensor, use **⚙️ Configure** on its entry.
 
 ### Initial setup
 
 1. Go to **Settings → Devices & Services → + Add Integration**
-2. Search for **Energy Tracker**
+2. Search for **Energy Window Tracker**
 3. **Step 1 — Select energy source:** Choose a daily cumulative energy sensor that resets (e.g. `sensor.today_energy_import`). If that sensor is already used by another entry, setup will show an error — edit the existing entry instead.
 4. **Step 2 — Add window:** Optionally set an **Energy source name** (defaults to the sensor’s name). Then name the window and set start and end times. Add more windows or change settings later via **⚙️ Configure**.
 
 ### ⚙️ Configure (add, edit, remove windows or change source)
 
-1. Go to **Settings → Devices & Services**, find **Energy Tracker** and open the entry.
-2. Click **⚙️ Configure** — the **Configure Energy Tracker** menu opens:
+1. Go to **Settings → Devices & Services**, find **Energy Window Tracker** and open the entry.
+2. Click **⚙️ Configure** — the **Configure Energy Window Tracker** menu opens:
    - **✚ Add new window** — Add a window (name, start time, end time). Save returns you to the menu.
    - **✏️ Manage windows** — Choose a window from the dropdown, then **Select**. The edit form opens (name, start, end; optional **❌ Delete?**). Save or delete (with confirmation) then returns to the window list.
    - **⚡️ Update energy source** — Pick a different energy sensor and optionally set a **Source name** (defaults to the sensor’s name). Returns to the menu.

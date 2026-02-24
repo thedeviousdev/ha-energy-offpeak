@@ -1,5 +1,5 @@
 {
-  "title": "Energy Tracker",
+  "title": "Energy Window Tracker",
   "config": {
     "step": {
       "user": {
@@ -29,7 +29,7 @@
     "error": {
       "window_start_after_end": "Start time must be earlier than end time.",
       "at_least_one_window": "At least one window is required (start time before end time).",
-      "source_already_in_use": "Energy source already in use. Edit the existing entry **{entry_title}** (Settings → Devices & Services → Energy Tracker) instead."
+      "source_already_in_use": "Energy source already in use. Edit the existing entry **{entry_title}** (Settings → Devices & Services → Energy Window Tracker) instead."
     },
     "abort": {
       "already_configured": "This configuration is already set up."
@@ -38,7 +38,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Energy Tracker",
+        "title": "Configure Energy Window Tracker",
         "description": "",
         "menu_options": {
           "add_window": "✚ Add new window",
@@ -55,7 +55,7 @@
         "submit": "Select"
       },
       "manage_windows_empty": {
-        "title": "Configure Energy Tracker",
+        "title": "Configure Energy Window Tracker",
         "description": "No windows yet. Use **Add new window** from the previous screen."
       },
       "source_entity": {
@@ -101,7 +101,7 @@
       "window_start_after_end": "Start time must be earlier than end time.",
       "at_least_one_window": "At least one window is required.",
       "source_entity_required": "Select an energy sensor.",
-      "source_already_in_use": "Energy source already in use. Edit the existing entry **{entry_title}** (Settings → Devices & Services → Energy Tracker) instead."
+      "source_already_in_use": "Energy source already in use. Edit the existing entry **{entry_title}** (Settings → Devices & Services → Energy Window Tracker) instead."
     },
     "abort": {
       "no_source": "No source configured. Please remove and re-add the integration."

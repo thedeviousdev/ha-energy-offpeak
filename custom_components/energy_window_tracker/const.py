@@ -1,6 +1,6 @@
-"""Constants for the Energy Tracker integration."""
+"""Constants for the Energy Window Tracker integration."""
 
-DOMAIN = "energy_tracker"
+DOMAIN = "energy_window_tracker"
 
 CONF_SOURCE_ENTITY = "source_entity"
 CONF_SOURCES = "sources"
@@ -16,7 +16,7 @@ DEFAULT_WINDOW_START = "11:00"
 DEFAULT_WINDOW_END = "14:00"
 
 STORAGE_VERSION = 1
-STORAGE_KEY = "energy_tracker_snapshots"
+STORAGE_KEY = "energy_window_tracker_snapshots"
 
 ATTR_SOURCE_ENTITY = "source_entity"
 ATTR_STATUS = "status"
