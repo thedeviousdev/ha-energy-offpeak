@@ -39,6 +39,13 @@
     "step": {
       "init": {
         "title": "Configure Windows",
+        "description": "Select the energy sensor, then submit to continue.",
+        "data": {
+          "source_entity": "Energy sensor"
+        }
+      },
+      "actions": {
+        "title": "Configure Windows",
         "description": "Select an action below.",
         "menu_options": {
           "add_window": "Add new window",
