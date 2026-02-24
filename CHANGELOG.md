@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.13.1...v1.13.2) (2026-02-24)
+
+
+### Bug Fixes
+
+* update energy source name ([#67](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/67)) ([d44e62f](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/d44e62f07a365bcc655ab47e10f8d63125de6f2e))
+
 ## [1.13.1](https://github.com/thedeviousdev/ha-energy-tracker/compare/v1.13.0...v1.13.1) (2026-02-24)
 
 
