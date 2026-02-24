@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.1](https://github.com/thedeviousdev/ha-energy-tracker/compare/v1.13.0...v1.13.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* rename offpeak ([#64](https://github.com/thedeviousdev/ha-energy-tracker/issues/64)) ([8bb6a62](https://github.com/thedeviousdev/ha-energy-tracker/commit/8bb6a6221b13e8c1674c09a3509c1740d0c59ba5))
+* rename to window ([#66](https://github.com/thedeviousdev/ha-energy-tracker/issues/66)) ([db6b97f](https://github.com/thedeviousdev/ha-energy-tracker/commit/db6b97ff0ec24d3b6f2cc08383540ca9e35f9670))
+
 ## [1.13.0](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.12.2...v1.13.0) (2026-02-24)
 
 
