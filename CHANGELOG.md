@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.4](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.14.3...v1.14.4) (2026-02-24)
+
+
+### Bug Fixes
+
+* schedule state write on event loop when callback runs from thread ([#80](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/80)) ([c013cec](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/c013cec08ffa25d047141792a4be338c8b9ad3e4))
+
 ## [1.14.3](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.14.2...v1.14.3) (2026-02-24)
 
 
