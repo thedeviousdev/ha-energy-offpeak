@@ -12,9 +12,9 @@
         "description": "Name the window and define the start and end times. You can add, edit and delete windows later via the \"configure\" menu.",
         "data": {
           "source_name": "Energy source name",
-          "w0_name": "Window name",
-          "w0_start": "Start time",
-          "w0_end": "End time"
+          "name": "Window name",
+          "start": "Start time",
+          "end": "End Time"
         }
       }
     },
@@ -71,8 +71,8 @@
         "description": "Name the window and define the start and end times",
         "data": {
           "name": "Window name",
-          "w0_start": "Start time",
-          "w0_end": "End time"
+          "start": "Start",
+          "end": "End"
         },
         "submit": "Save"
       },
@@ -81,8 +81,8 @@
         "description": "",
         "data": {
           "name": "Window name",
-          "w0_start": "Start time",
-          "w0_end": "End time",
+          "start": "Start",
+          "end": "End",
           "delete_this_window": "❌ Delete?"
         },
         "submit": "Save"

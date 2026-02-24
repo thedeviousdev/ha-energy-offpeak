@@ -144,8 +144,9 @@ def _build_windows_schema(
     existing_windows: list[dict] | None = None,
     num_rows: int = 1,
     default_source_name: str | None = None,
+    use_simple_keys: bool = False,
 ) -> vol.Schema:
-    """Build schema: optional source name, then num_rows window rows (w{i}_name, w{i}_start, w{i}_end)."""
+    """Build schema: optional source name, then num_rows window rows. use_simple_keys=True uses name/start/end for row 0."""
     existing = existing_windows or []
     if not isinstance(existing, list):
         existing = []
@@ -157,6 +158,9 @@ def _build_windows_schema(
         ] = str
     for i in range(num_rows):
         name_lbl, start_lbl, end_lbl = _window_labels(i)
+        name_key = "name" if (use_simple_keys and i == 0) else f"w{i}_name"
+        start_key = "start" if (use_simple_keys and i == 0) else f"w{i}_start"
+        end_key = "end" if (use_simple_keys and i == 0) else f"w{i}_end"
         if i < len(existing) and isinstance(existing[i], dict):
             ex = existing[i]
             name_val = ex.get(CONF_WINDOW_NAME) or ex.get("name") or ""
@@ -168,40 +172,44 @@ def _build_windows_schema(
             )
             schema_dict[
                 vol.Optional(
-                    f"w{i}_name",
+                    name_key,
                     default=name_val if isinstance(name_val, str) else "",
                     description=name_lbl,
                 )
             ] = str
             schema_dict[
-                vol.Optional(f"w{i}_start", default=start_val, description=start_lbl)
+                vol.Optional(start_key, default=start_val, description=start_lbl)
             ] = selector.TimeSelector()
             schema_dict[
-                vol.Optional(f"w{i}_end", default=end_val, description=end_lbl)
+                vol.Optional(end_key, default=end_val, description=end_lbl)
             ] = selector.TimeSelector()
         else:
-            # New row: default 11:00–14:00; window is only added when user clicks Save
             schema_dict[
-                vol.Optional(f"w{i}_name", default="", description=name_lbl)
+                vol.Optional(name_key, default="", description=name_lbl)
             ] = str
             schema_dict[
-                vol.Optional(f"w{i}_start", default=DEFAULT_WINDOW_START, description=start_lbl)
+                vol.Optional(start_key, default=DEFAULT_WINDOW_START, description=start_lbl)
             ] = selector.TimeSelector()
             schema_dict[
-                vol.Optional(f"w{i}_end", default=DEFAULT_WINDOW_END, description=end_lbl)
+                vol.Optional(end_key, default=DEFAULT_WINDOW_END, description=end_lbl)
             ] = selector.TimeSelector()
     return vol.Schema(schema_dict)
 
 
-def _collect_windows_from_input(data: dict, num_rows: int) -> list[dict[str, Any]]:
+def _collect_windows_from_input(data: dict, num_rows: int, use_simple_keys: bool = False) -> list[dict[str, Any]]:
     """Collect windows from form data for rows 0..num_rows-1 where start < end."""
     windows = []
     for i in range(num_rows):
-        start = _time_to_str(data.get(f"w{i}_start", "00:00"))
-        end = _time_to_str(data.get(f"w{i}_end", "00:00"))
+        if use_simple_keys and i == 0:
+            start = _time_to_str(data.get("start") or data.get("w0_start", "00:00"))
+            end = _time_to_str(data.get("end") or data.get("w0_end", "00:00"))
+            name = (data.get("name") or data.get("w0_name") or "").strip()
+        else:
+            start = _time_to_str(data.get(f"w{i}_start", "00:00"))
+            end = _time_to_str(data.get(f"w{i}_end", "00:00"))
+            name = (data.get(f"w{i}_name") or "").strip()
         if start >= end:
             continue
-        name = (data.get(f"w{i}_name") or "").strip()
         windows.append(
             {
                 CONF_WINDOW_START: start,
@@ -212,16 +220,23 @@ def _collect_windows_from_input(data: dict, num_rows: int) -> list[dict[str, Any
     return windows
 
 
-def _get_window_rows_from_input(data: dict, num_rows: int) -> list[dict[str, Any]]:
+def _get_window_rows_from_input(data: dict, num_rows: int, use_simple_keys: bool = False) -> list[dict[str, Any]]:
     """Get all row data from input for re-showing form after validation error."""
-    return [
-        {
-            CONF_WINDOW_NAME: data.get(f"w{i}_name") or "",
-            CONF_WINDOW_START: _time_to_str(data.get(f"w{i}_start", "00:00")),
-            CONF_WINDOW_END: _time_to_str(data.get(f"w{i}_end", "00:00")),
-        }
-        for i in range(num_rows)
-    ]
+    rows = []
+    for i in range(num_rows):
+        if use_simple_keys and i == 0:
+            rows.append({
+                CONF_WINDOW_NAME: data.get("name") or data.get("w0_name") or "",
+                CONF_WINDOW_START: _time_to_str(data.get("start") or data.get("w0_start", "00:00")),
+                CONF_WINDOW_END: _time_to_str(data.get("end") or data.get("w0_end", "00:00")),
+            })
+        else:
+            rows.append({
+                CONF_WINDOW_NAME: data.get(f"w{i}_name") or "",
+                CONF_WINDOW_START: _time_to_str(data.get(f"w{i}_start", "00:00")),
+                CONF_WINDOW_END: _time_to_str(data.get(f"w{i}_end", "00:00")),
+            })
+    return rows
 
 
 class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -263,7 +278,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         source_entity = self._source_entity or ""
 
         if user_input is not None:
-            windows = _collect_windows_from_input(user_input, num_rows=1)
+            windows = _collect_windows_from_input(user_input, num_rows=1, use_simple_keys=True)
             if not windows:
                 errors["base"] = "at_least_one_window"
                 return self.async_show_form(
@@ -271,13 +286,14 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=_build_windows_schema(
                         self.hass,
                         source_entity,
-                        _get_window_rows_from_input(user_input, 1),
+                        _get_window_rows_from_input(user_input, 1, use_simple_keys=True),
                         default_source_name=user_input.get("source_name") or _get_entity_friendly_name(self.hass, source_entity),
+                        use_simple_keys=True,
                     ),
                     errors=errors,
                 )
-            start = _time_to_str(user_input.get("w0_start", "00:00"))
-            end = _time_to_str(user_input.get("w0_end", "00:00"))
+            start = _time_to_str(user_input.get("start") or user_input.get("w0_start", "00:00"))
+            end = _time_to_str(user_input.get("end") or user_input.get("w0_end", "00:00"))
             if start >= end:
                 errors["base"] = "window_start_after_end"
                 return self.async_show_form(
@@ -285,23 +301,28 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=_build_windows_schema(
                         self.hass,
                         source_entity,
-                        _get_window_rows_from_input(user_input, 1),
+                        _get_window_rows_from_input(user_input, 1, use_simple_keys=True),
                         default_source_name=user_input.get("source_name") or _get_entity_friendly_name(self.hass, source_entity),
+                        use_simple_keys=True,
                     ),
                     errors=errors,
                 )
             source_name = (user_input.get("source_name") or "").strip() or _get_entity_friendly_name(self.hass, source_entity)
             source_name = (source_name or "Energy Window Tracker").strip()[:200]
             entry_title = source_name or "Energy Window Tracker"
-            self._pending_entry_title = entry_title
-            self._pending_sources = [
-                {
-                    CONF_NAME: source_name,
-                    CONF_SOURCE_ENTITY: source_entity,
-                    CONF_WINDOWS: windows,
-                }
-            ]
-            return await self.async_step_configure_menu(None)
+            # Create entry immediately so submitted values are saved
+            return self.async_create_entry(
+                title=entry_title,
+                data={
+                    CONF_SOURCES: [
+                        {
+                            CONF_NAME: source_name,
+                            CONF_SOURCE_ENTITY: source_entity,
+                            CONF_WINDOWS: windows,
+                        }
+                    ]
+                },
+            )
 
         return self.async_show_form(
             step_id="windows",
@@ -309,6 +330,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass,
                 source_entity,
                 default_source_name=_get_entity_friendly_name(self.hass, source_entity),
+                use_simple_keys=True,
             ),
             errors=errors,
         )
@@ -354,16 +376,15 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Add a window (config flow, pending entry)."""
         src = self._get_pending_source()
         source_entity = str(src.get(CONF_SOURCE_ENTITY) or "")
-        if user_input is not None and "w0_start" in user_input:
-            start = _time_to_str(user_input.get("w0_start", "00:00"))
-            end = _time_to_str(user_input.get("w0_end", "00:00"))
+        if user_input is not None and "start" in user_input:
+            start, end = _get_start_end_from_input(user_input)
             if start >= end:
                 return self.async_show_form(
                     step_id="add_window",
                     data_schema=_build_single_window_schema({
                         CONF_WINDOW_NAME: user_input.get(CONF_WINDOW_NAME, ""),
-                        CONF_WINDOW_START: start,
-                        CONF_WINDOW_END: end,
+                        "start": start,
+                        "end": end,
                     }),
                     errors={"base": "window_start_after_end"},
                 )
@@ -424,8 +445,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 windows.pop(idx)
                 self._pending_sources[0][CONF_WINDOWS] = windows
                 return await self.async_step_configure_menu(None)
-            start = _time_to_str(user_input.get("w0_start", "00:00"))
-            end = _time_to_str(user_input.get("w0_end", "00:00"))
+            start, end = _get_start_end_from_input(user_input)
             if start >= end:
                 return self.async_show_form(
                     step_id="edit_window",
@@ -540,6 +560,13 @@ def _build_source_entity_schema(source_entity: str, current_source_name: str = "
     )
 
 
+def _get_start_end_from_input(user_input: dict[str, Any]) -> tuple[str, str]:
+    """Get start and end time strings from form input (keys 'start'/'end' or 'w0_start'/'w0_end')."""
+    start = _time_to_str(user_input.get("start") or user_input.get("w0_start", "00:00"))
+    end = _time_to_str(user_input.get("end") or user_input.get("w0_end", "00:00"))
+    return start, end
+
+
 def _build_single_window_schema(
     window: dict[str, Any] | None = None,
     include_delete: bool = False,
@@ -555,12 +582,8 @@ def _build_single_window_schema(
         vol.Optional(
             CONF_WINDOW_NAME, default=name_val, description="Window name"
         ): str,
-        vol.Optional(
-            "w0_start", default=start_val, description="Start time"
-        ): selector.TimeSelector(),
-        vol.Optional(
-            "w0_end", default=end_val, description="End time"
-        ): selector.TimeSelector(),
+        vol.Optional("start", default=start_val, description="Start"): selector.TimeSelector(),
+        vol.Optional("end", default=end_val, description="End"): selector.TimeSelector(),
     }
     if include_delete:
         schema_dict[
@@ -825,8 +848,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
 
         if user_input is not None:
-            start = _time_to_str(user_input.get("w0_start", "00:00"))
-            end = _time_to_str(user_input.get("w0_end", "00:00"))
+            start, end = _get_start_end_from_input(user_input)
             if start >= end:
                 return self.async_show_form(
                     step_id="add_window",
@@ -871,8 +893,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             if user_input.get("delete_this_window"):
                 self._delete_index = edit_index
                 return await self.async_step_confirm_delete(None)
-            start = _time_to_str(user_input.get("w0_start", "00:00"))
-            end = _time_to_str(user_input.get("w0_end", "00:00"))
+            start, end = _get_start_end_from_input(user_input)
             if start >= end:
                 return self.async_show_form(
                     step_id="edit_window",
