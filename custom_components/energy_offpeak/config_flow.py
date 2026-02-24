@@ -373,15 +373,33 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Manage Windows: source entity, list, Add/Edit/Delete actions."""
+        """Initial screen: source entity (editable) and Submit. Then actions menu."""
         try:
-            return await self._async_step_manage_impl(user_input)
+            src = self._get_current_source()
+            source_entity = str(src.get(CONF_SOURCE_ENTITY) or "sensor.today_energy_import")
+            windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
+            if user_input is not None:
+                new_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
+                if new_entity:
+                    self._save_source(new_entity, windows)
+                return await self.async_step_actions(None)
+            return self.async_show_form(
+                step_id="init",
+                data_schema=_build_source_entity_schema(source_entity),
+                description_placeholders={"windows_list": ""},
+            )
         except Exception as err:
             _LOGGER.exception(
                 "Energy Window Tracker options flow failed: %s",
                 err,
             )
             raise
+
+    async def async_step_actions(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Show actions menu: Add new window, Manage windows, Change source entity."""
+        return self._async_step_manage_impl(user_input)
 
     def _async_show_menu(
         self,
@@ -417,7 +435,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
 
         menu_options = _build_init_menu_options()
         return self._async_show_menu(
-            step_id="init",
+            step_id="actions",
             menu_options=menu_options,
             description_placeholders={"windows_list": ""},
             title="Configure Windows",
