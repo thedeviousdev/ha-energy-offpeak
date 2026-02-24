@@ -16,6 +16,7 @@
         "title": "Add window",
         "description": "Name the window and define the start and end times. You can add, edit and delete windows later via the \"configure\" menu.",
         "data": {
+          "source_name": "Energy source name",
           "w0_name": "Window name",
           "w0_start": "Start time",
           "w0_end": "End time"
@@ -61,7 +62,8 @@
         "title": "Change source entity",
         "description": "",
         "data": {
-          "source_entity": "Energy source"
+          "source_entity": "Energy source",
+          "name": "Source name"
         }
       },
       "source_entity_updated": {

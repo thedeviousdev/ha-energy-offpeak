@@ -23,7 +23,7 @@ Snapshots of the current energy consumption are taken at the **start** and **end
 
 ### Manual
 
-1. Copy the `custom_components/energy_offpeak/` folder into your HA `config/custom_components/` directory
+1. Copy the `custom_components/energy_tracker/` folder into your HA `config/custom_components/` directory
 2. Restart Home Assistant
 
 ## Updating
@@ -41,7 +41,7 @@ Each integration entry has **one energy source** and can have **many time window
 1. Go to **Settings → Devices & Services → + Add Integration**
 2. Search for **Energy Tracker**
 3. **Step 1 — Select energy source:** Choose a daily cumulative energy sensor that resets (e.g. `sensor.today_energy_import`). If that sensor is already used by another entry, setup will show an error — edit the existing entry instead.
-4. **Step 2 — Add window:** Name the window and set start and end times. Add more windows or change settings later via **⚙️ Configure**.
+4. **Step 2 — Add window:** Optionally set an **Energy source name** (defaults to the sensor’s name). Then name the window and set start and end times. Add more windows or change settings later via **⚙️ Configure**.
 
 ### ⚙️ Configure (add, edit, remove windows or change source)
 
@@ -49,7 +49,7 @@ Each integration entry has **one energy source** and can have **many time window
 2. Click **⚙️ Configure** — the **Configure Energy Tracker** menu opens:
    - **✚ Add new window** — Add a window (name, start time, end time). Save returns you to the menu.
    - **✏️ Manage windows** — Choose a window from the dropdown, then **Select**. The edit form opens (name, start, end; optional **❌ Delete?**). Save or delete (with confirmation) then returns to the window list.
-   - **⚡️ Update energy source** — Pick a different energy sensor, then returns to the menu.
+   - **⚡️ Update energy source** — Pick a different energy sensor and optionally set a **Source name** (defaults to the sensor’s name). Returns to the menu.
 
 Use **Submit**, **Select**, or **Save** as appropriate when done.
 

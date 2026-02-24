@@ -142,13 +142,18 @@ def _build_windows_schema(
     source_entity: str,
     existing_windows: list[dict] | None = None,
     num_rows: int = 1,
+    default_source_name: str | None = None,
 ) -> vol.Schema:
-    """Build schema: num_rows window rows (w{i}_name, w{i}_start, w{i}_end)."""
+    """Build schema: optional source name, then num_rows window rows (w{i}_name, w{i}_start, w{i}_end)."""
     existing = existing_windows or []
     if not isinstance(existing, list):
         existing = []
 
     schema_dict: dict[Any, Any] = {}
+    if default_source_name is not None:
+        schema_dict[
+            vol.Optional("source_name", default=default_source_name, description="Energy source name")
+        ] = str
     for i in range(num_rows):
         name_lbl, start_lbl, end_lbl = _window_labels(i)
         if i < len(existing) and isinstance(existing[i], dict):
@@ -277,6 +282,7 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.hass,
                         source_entity,
                         _get_window_rows_from_input(user_input, 1),
+                        default_source_name=user_input.get("source_name") or _get_entity_friendly_name(self.hass, source_entity),
                     ),
                     errors=errors,
                 )
@@ -290,12 +296,14 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.hass,
                         source_entity,
                         _get_window_rows_from_input(user_input, 1),
+                        default_source_name=user_input.get("source_name") or _get_entity_friendly_name(self.hass, source_entity),
                     ),
                     errors=errors,
                 )
-            source_name = _get_entity_friendly_name(self.hass, source_entity)
+            source_name = (user_input.get("source_name") or "").strip() or _get_entity_friendly_name(self.hass, source_entity)
+            source_name = (source_name or "Energy Tracker").strip()[:200]
             # Entry title for "Integration entries": user-defined sensor name, or entity name, or default
-            entry_title = (source_name or "Energy Tracker")[:200]
+            entry_title = source_name or "Energy Tracker"
             # Single entry for the whole integration: all sources live under this one entry
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
@@ -314,7 +322,11 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="windows",
-            data_schema=_build_windows_schema(self.hass, source_entity),
+            data_schema=_build_windows_schema(
+                self.hass,
+                source_entity,
+                default_source_name=_get_entity_friendly_name(self.hass, source_entity),
+            ),
             errors=errors,
         )
 
@@ -368,14 +380,19 @@ def _build_select_window_schema(windows: list[dict[str, Any]]) -> vol.Schema:
     )
 
 
-def _build_source_entity_schema(source_entity: str) -> vol.Schema:
-    """Build schema for changing the source entity."""
+def _build_source_entity_schema(source_entity: str, current_source_name: str = "") -> vol.Schema:
+    """Build schema for changing the source entity and optional source name."""
     return vol.Schema(
         {
             vol.Required(
                 CONF_SOURCE_ENTITY,
                 default=source_entity or DEFAULT_SOURCE_ENTITY,
             ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Optional(
+                CONF_NAME,
+                default=current_source_name or "",
+                description="Source name",
+            ): str,
         }
     )
 
@@ -425,9 +442,17 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             raise ValueError("No source configured")
         return sources[0]
 
-    def _save_source(self, source_entity: str, windows: list[dict[str, Any]]) -> None:
+    def _save_source(
+        self,
+        source_entity: str,
+        windows: list[dict[str, Any]],
+        source_name: str | None = None,
+    ) -> None:
         """Persist source and windows to config entry."""
-        source_name = _get_entity_friendly_name(self.hass, source_entity)
+        if source_name is None or not source_name.strip():
+            source_name = _get_entity_friendly_name(self.hass, source_entity)
+        else:
+            source_name = source_name.strip()[:200]
         new_source = {
             CONF_NAME: source_name,
             CONF_SOURCE_ENTITY: source_entity,
@@ -560,7 +585,9 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             new_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
             if new_entity:
-                self._save_source(new_entity, windows)
+                custom_name = (user_input.get(CONF_NAME) or "").strip()
+                source_name = custom_name or _get_entity_friendly_name(self.hass, new_entity)
+                self._save_source(new_entity, windows, source_name=source_name)
                 if new_entity != source_entity:
                     return self.async_show_form(
                         step_id="source_entity_updated",
@@ -568,9 +595,12 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                     )
             return await self._async_step_manage_impl(None)
 
+        current_name = str(src.get(CONF_NAME) or "") or _get_entity_friendly_name(
+            self.hass, source_entity
+        )
         return self.async_show_form(
             step_id="source_entity",
-            data_schema=_build_source_entity_schema(source_entity),
+            data_schema=_build_source_entity_schema(source_entity, current_name),
         )
 
     async def async_step_source_entity_updated(
