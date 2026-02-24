@@ -9,7 +9,7 @@
           "source_entity": "Energy source"
         },
         "data_description": {
-          "source_entity": "Cumulative kWh sensor that resets daily (e.g. sensor.today_energy_import)."
+          "source_entity": "Cumulative kWh sensor that resets daily (e.g. sensor.today_load)."
         }
       },
       "windows": {
@@ -58,13 +58,19 @@
         "title": "Configure Energy Window Tracker",
         "description": "No windows yet. Use **Add new window** from the previous screen."
       },
+      "source_entity_confirm": {
+        "title": "Update energy source",
+        "description": "Changing the energy source will **permanently delete all historical data** for the current source. You can re-use the same source name for the new source. Continue to choose the new entity.",
+        "submit": "Continue"
+      },
       "source_entity": {
         "title": "Update energy source",
         "description": "",
         "data": {
           "source_entity": "Energy source",
           "name": "Source name"
-        }
+        },
+        "submit": "Update"
       },
       "source_entity_updated": {
         "title": "Source entity updated",

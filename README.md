@@ -40,7 +40,7 @@ Each integration entry has **one energy source** and can have **many time window
 
 1. Go to **Settings → Devices & Services → + Add Integration**
 2. Search for **Energy Window Tracker**
-3. **Step 1 — Select energy source:** Choose a daily cumulative energy sensor that resets (e.g. `sensor.today_energy_import`). If that sensor is already used by another entry, setup will show an error — edit the existing entry instead.
+3. **Step 1 — Select energy source:** Choose a daily cumulative energy sensor that resets (e.g. `sensor.today_load`). If that sensor is already used by another entry, setup will show an error — edit the existing entry instead.
 4. **Step 2 — Add window:** Optionally set an **Energy source name** (defaults to the sensor’s name). Then name the window and set start and end times. Add more windows or change settings later via **⚙️ Configure**.
 
 ### ⚙️ Configure (add, edit, remove windows or change source)

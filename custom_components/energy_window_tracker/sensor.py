@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -308,6 +309,23 @@ async def async_setup_entry(
             )
             all_sensors.append(sensor)
 
+    # Remove entities for windows that no longer exist (e.g. after user deleted a window)
+    current_unique_ids = {sensor.unique_id for sensor in all_sensors}
+    registry = er.async_get(hass)
+    for entity_entry in registry.entities.get_entries_for_config_entry_id(
+        entry.entry_id
+    ):
+        if (
+            entity_entry.domain == "sensor"
+            and entity_entry.unique_id not in current_unique_ids
+        ):
+            _LOGGER.debug(
+                "Removing orphaned sensor entity %s (unique_id: %s)",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+            )
+            registry.async_remove(entity_entry.entity_id)
+
     async_add_entities(all_sensors, update_before_add=True)
 
 
@@ -318,7 +336,8 @@ class WindowEnergySensor(RestoreSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_icon = "mdi:clock-outline"
-    _attr_should_poll = False
+    _attr_should_poll = True
+    _attr_scan_interval = timedelta(seconds=30)
 
     def __init__(
         self,
@@ -395,6 +414,11 @@ class WindowEnergySensor(RestoreSensor):
             for unsub in unsubs:
                 self.async_on_remove(unsub)
 
+        self._update_value()
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Poll source and refresh displayed value for live updates."""
         self._update_value()
         self.async_write_ha_state()
 

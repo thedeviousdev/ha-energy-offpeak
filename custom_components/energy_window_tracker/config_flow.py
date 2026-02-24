@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import callback
-from homeassistant.helpers import selector
+from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers.storage import Store
 
 from .const import (
     CONF_NAME,
@@ -579,6 +580,16 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             new_windows = [w for i, w in enumerate(windows) if i != idx]
             current_name = src.get(CONF_NAME) or None
             self._save_source(source_entity, new_windows, source_name=current_name)
+            # Remove the sensor entity for the deleted window
+            slug = (
+                source_entity.replace(".", "_").replace(":", "_")[:64]
+                if source_entity
+                else "source_0"
+            )
+            unique_id = f"{self._config_entry.entry_id}_{slug}_{idx}"
+            registry = er.async_get(self.hass)
+            if entity_id := registry.async_get_entity_id("sensor", DOMAIN, unique_id):
+                registry.async_remove(entity_id)
             return await self._async_step_manage_windows_impl(None)
         return self.async_show_form(
             step_id="confirm_delete",
@@ -586,33 +597,75 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             description_placeholders={"window_name": window_name},
         )
 
+    async def async_step_source_entity_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Confirm before changing source: historical data will be deleted."""
+        if user_input is not None:
+            src = self._get_current_source()
+            source_entity = str(src.get(CONF_SOURCE_ENTITY) or DEFAULT_SOURCE_ENTITY)
+            current_name = str(src.get(CONF_NAME) or "") or _get_entity_friendly_name(
+                self.hass, source_entity
+            )
+            return self.async_show_form(
+                step_id="source_entity",
+                data_schema=_build_source_entity_schema(source_entity, current_name),
+            )
+        return self.async_show_form(
+            step_id="source_entity_confirm",
+            data_schema=vol.Schema({}),
+        )
+
     async def async_step_source_entity(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
-        """Change the source entity (form), then return to menu."""
+        """Change the source entity (form). Asks for confirmation first."""
         src = self._get_current_source()
         source_entity = str(src.get(CONF_SOURCE_ENTITY) or DEFAULT_SOURCE_ENTITY)
         windows = _normalize_windows_for_schema(src.get(CONF_WINDOWS) or [])
 
-        if user_input is not None:
+        if user_input is not None and CONF_SOURCE_ENTITY in user_input:
             new_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
-            if new_entity:
-                custom_name = (user_input.get(CONF_NAME) or "").strip()
-                source_name = custom_name or _get_entity_friendly_name(self.hass, new_entity)
-                self._save_source(new_entity, windows, source_name=source_name)
-                if new_entity != source_entity:
-                    return self.async_show_form(
-                        step_id="source_entity_updated",
-                        data_schema=vol.Schema({}),
-                    )
+            if not new_entity:
+                current_name = str(src.get(CONF_NAME) or "") or _get_entity_friendly_name(
+                    self.hass, source_entity
+                )
+                return self.async_show_form(
+                    step_id="source_entity",
+                    data_schema=_build_source_entity_schema(source_entity, current_name),
+                )
+            custom_name = (user_input.get(CONF_NAME) or "").strip()
+            source_name = custom_name or _get_entity_friendly_name(self.hass, new_entity)
+
+            # Remove all sensor entities for this config entry (old source)
+            registry = er.async_get(self.hass)
+            for entity_entry in registry.entities.get_entries_for_config_entry_id(
+                self._config_entry.entry_id
+            ):
+                if entity_entry.domain == "sensor" and entity_entry.platform == DOMAIN:
+                    registry.async_remove(entity_entry.entity_id)
+
+            # Clear historical snapshot storage for the old source
+            old_slug = (
+                source_entity.replace(".", "_").replace(":", "_")[:64]
+                if source_entity
+                else "source_0"
+            )
+            store = Store(
+                self.hass,
+                STORAGE_VERSION,
+                f"{STORAGE_KEY}_{self._config_entry.entry_id}_{old_slug}",
+            )
+            await store.async_save({})
+
+            self._save_source(new_entity, windows, source_name=source_name)
+            await self.hass.config_entries.async_reload(self._config_entry.entry_id)
             return await self._async_step_manage_impl(None)
 
-        current_name = str(src.get(CONF_NAME) or "") or _get_entity_friendly_name(
-            self.hass, source_entity
-        )
+        # First time: show confirmation step
         return self.async_show_form(
-            step_id="source_entity",
-            data_schema=_build_source_entity_schema(source_entity, current_name),
+            step_id="source_entity_confirm",
+            data_schema=vol.Schema({}),
         )
 
     async def async_step_source_entity_updated(
