@@ -13,7 +13,7 @@
         }
       },
       "windows": {
-        "title": "First window",
+        "title": "Add window",
         "description": "Name the window and define the start and end times. You can add, edit and delete windows later via the \"configure\" menu.",
         "data": {
           "w0_name": "Window name",
@@ -63,6 +63,11 @@
         "data": {
           "source_entity": "Energy source"
         }
+      },
+      "source_entity_updated": {
+        "title": "Source entity updated",
+        "description": "The previous entity was not deleted so that historical data can be preserved. If you do not want it anymore, you can manually delete it from Settings → Devices & Services → Entities.",
+        "submit": "Continue"
       },
       "confirm_delete": {
         "title": "Delete window",

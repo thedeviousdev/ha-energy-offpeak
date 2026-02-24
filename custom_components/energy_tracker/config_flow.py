@@ -174,15 +174,15 @@ def _build_windows_schema(
                 vol.Optional(f"w{i}_end", default=end_val, description=end_lbl)
             ] = selector.TimeSelector()
         else:
-            # New row: default 00:00-00:00 so it is skipped unless user sets valid times
+            # New row: default 11:00–14:00; window is only added when user clicks Save
             schema_dict[
                 vol.Optional(f"w{i}_name", default="", description=name_lbl)
             ] = str
             schema_dict[
-                vol.Optional(f"w{i}_start", default="00:00", description=start_lbl)
+                vol.Optional(f"w{i}_start", default=DEFAULT_WINDOW_START, description=start_lbl)
             ] = selector.TimeSelector()
             schema_dict[
-                vol.Optional(f"w{i}_end", default="00:00", description=end_lbl)
+                vol.Optional(f"w{i}_end", default=DEFAULT_WINDOW_END, description=end_lbl)
             ] = selector.TimeSelector()
     return vol.Schema(schema_dict)
 
@@ -561,11 +561,27 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             new_entity = user_input.get(CONF_SOURCE_ENTITY) or source_entity
             if new_entity:
                 self._save_source(new_entity, windows)
+                if new_entity != source_entity:
+                    return self.async_show_form(
+                        step_id="source_entity_updated",
+                        data_schema=vol.Schema({}),
+                    )
             return await self._async_step_manage_impl(None)
 
         return self.async_show_form(
             step_id="source_entity",
             data_schema=_build_source_entity_schema(source_entity),
+        )
+
+    async def async_step_source_entity_updated(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Show info that the previous entity was not deleted, then return to menu."""
+        if user_input is not None:
+            return await self._async_step_manage_impl(None)
+        return self.async_show_form(
+            step_id="source_entity_updated",
+            data_schema=vol.Schema({}),
         )
 
     async def async_step_add_window(
