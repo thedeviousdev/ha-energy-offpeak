@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.8.0...v1.8.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* fix labels ([#36](https://github.com/thedeviousdev/ha-energy-offpeak/issues/36)) ([71a4168](https://github.com/thedeviousdev/ha-energy-offpeak/commit/71a4168d5deedbf06b7616213545879bb89620a0))
+
 ## [1.8.0](https://github.com/thedeviousdev/ha-energy-offpeak/compare/v1.7.0...v1.8.0) (2026-02-23)
 
 
