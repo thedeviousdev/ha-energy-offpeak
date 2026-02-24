@@ -59,7 +59,7 @@
         "description": "No windows yet. Use **Add new window** from the previous screen."
       },
       "source_entity": {
-        "title": "Change source entity",
+        "title": "Update energy source",
         "description": "",
         "data": {
           "source_entity": "Energy source",
