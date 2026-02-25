@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.14.8...v2.0.0) (2026-02-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sensor:** source in entity_id and remove legacy keys ([#93](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/93))
+
+### Features
+
+* allow up to 5 decimal places for Cost per kWh ([#92](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/92)) ([5f147b5](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/5f147b57c27a4f2d48a9a5c7d384447539935a3d))
+* **sensor:** source in entity_id and remove legacy keys ([#93](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/93)) ([ab1331d](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/ab1331d8874e343885457b8157523fef1097c362))
+
 ## [1.14.8](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.14.7...v1.14.8) (2026-02-25)
 
 
