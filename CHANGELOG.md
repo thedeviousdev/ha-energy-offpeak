@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.6](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.14.5...v1.14.6) (2026-02-25)
+
+
+### Bug Fixes
+
+* late snapshot, schedule save on loop, update only when value/status changes ([#84](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/84)) ([0cc5aef](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/0cc5aefd1a07bdb38d1f17c4bf415bdcf40bb0cb))
+
 ## [1.14.5](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v1.14.4...v1.14.5) (2026-02-24)
 
 
