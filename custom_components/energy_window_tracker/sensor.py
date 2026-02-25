@@ -402,7 +402,9 @@ class WindowEnergySensor(RestoreSensor):
         self._data = data
         self._windows = windows
         self._is_first = is_first
-        self._attr_name = window.name
+        # Name used at registration so entity_id includes source (e.g. sensor.sensor_today_load_peak).
+        # Friendly name is set to window name only in async_added_to_hass.
+        self._attr_name = f"{source_slug} {window.name}" if source_slug else window.name
         # Stable unique_id by entry + source slot + window index so entity_id is preserved
         # when the user updates the energy source (same entry, same slot, same window).
         self._attr_unique_id = f"{entry_id}_source_{source_index}_{window_index}"
@@ -412,6 +414,9 @@ class WindowEnergySensor(RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Restore state and register listeners."""
         await super().async_added_to_hass()
+
+        # Friendly name is window name only (entity_id already includes source from __init__ name).
+        self._attr_name = self._window.name
 
         if (last := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = last.native_value
