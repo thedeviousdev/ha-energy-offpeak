@@ -392,7 +392,7 @@ class WindowEnergySensor(RestoreSensor):
         self._data = data
         self._windows = windows
         self._is_first = is_first
-        self._attr_name = f"{config_name} - {window.name}"
+        self._attr_name = window.name
         # Stable unique_id by entry + source slot + window index so entity_id is preserved
         # when the user updates the energy source (same entry, same slot, same window).
         self._attr_unique_id = f"{entry_id}_source_{source_index}_{window_index}"

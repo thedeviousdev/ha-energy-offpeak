@@ -582,8 +582,8 @@ def _build_single_window_schema(
         vol.Optional(
             CONF_WINDOW_NAME, default=name_val, description="Window name"
         ): str,
-        vol.Optional("start", default=start_val, description="Start"): selector.TimeSelector(),
-        vol.Optional("end", default=end_val, description="End"): selector.TimeSelector(),
+        vol.Optional("start", default=start_val, description="Start time"): selector.TimeSelector(),
+        vol.Optional("end", default=end_val, description="End time"): selector.TimeSelector(),
     }
     if include_delete:
         schema_dict[

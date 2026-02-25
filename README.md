@@ -38,8 +38,8 @@ Each integration entry has **one energy source** and can have **many time window
 
 1. Go to **Settings → Devices & Services → + Add Integration**
 2. Search for **Energy Window Tracker**
-3. **Step 1 — Select energy source:** Choose a daily cumulative energy sensor that resets (e.g. `sensor.today_load`).
-4. **Step 2 — Add window:** Optionally set an **Energy source name** (defaults to the sensor’s name). Then name the window and set start and end times. Submit opens **Configure Energy Window Tracker** (same menu as ⚙️ Configure): add more windows, manage or edit windows, update the source, or click **Done** to finish.
+3. **Step 1 — Select sensor:** Choose a daily cumulative energy sensor that resets (e.g. `sensor.today_load`).
+4. **Step 2 — Add window:** Optionally set a **Source name** (defaults to the sensor’s name). Name the window and set start and end times. **Submit** creates the entry; add more windows or change settings later via **⚙️ Configure** on the entry.
 
 ### ⚙️ Configure (add, edit, remove windows or change source)
 
@@ -47,11 +47,13 @@ Each integration entry has **one energy source** and can have **many time window
 2. Click **⚙️ Configure** — the **Configure Energy Window Tracker** menu opens:
    - **✚ Add new window** — Add a window (name, start time, end time). Save returns you to the menu.
    - **✏️ Manage windows** — Choose a window from the dropdown, then **Select**. The edit form opens (name, start, end; optional **❌ Delete?**). Save or delete (with confirmation) then returns to the window list.
-   - **⚡️ Update energy source** — Pick a different energy sensor and optionally set a **Source name** (defaults to the sensor’s name). Returns to the menu.
+   - **⚡️ Update energy source** — A confirmation explains that changing the source will permanently delete all historical data for the current source; **Continue** opens the form to pick a new sensor and optional **Source name**, then **Update** applies the change. Returns to the menu.
 
-Use **Submit**, **Select**, or **Save** as appropriate when done.
+Use **Submit**, **Select**, **Save**, or **Update** as appropriate when done.
 
 ## Sensor Attributes
+
+Each window is a sensor whose **friendly name** is the window name (e.g. "Peak").
 
 | Attribute       | Description                                                    |
 | --------------- | -------------------------------------------------------------- |

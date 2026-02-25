@@ -86,8 +86,8 @@
         "description": "Name the window and define the start and end times",
         "data": {
           "name": "Window name",
-          "start": "Start",
-          "end": "End"
+          "start": "Start time",
+          "end": "End time"
         },
         "submit": "Save"
       },
@@ -96,8 +96,8 @@
         "description": "",
         "data": {
           "name": "Window name",
-          "start": "Start",
-          "end": "End",
+          "start": "Start time",
+          "end": "End time",
           "delete_this_window": "❌ Delete?"
         },
         "submit": "Save"
