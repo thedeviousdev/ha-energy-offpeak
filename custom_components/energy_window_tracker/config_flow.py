@@ -206,7 +206,7 @@ def _build_windows_schema(
                     description=cost_lbl,
                 )
             ] = selector.NumberSelector(
-                selector.NumberSelectorConfig(min=0, max=100, step=0.01, mode="box")
+                selector.NumberSelectorConfig(min=0, max=100, step=0.00001, mode="box")
             )
         else:
             schema_dict[
@@ -225,7 +225,7 @@ def _build_windows_schema(
                     description=cost_lbl,
                 )
             ] = selector.NumberSelector(
-                selector.NumberSelectorConfig(min=0, max=100, step=0.01, mode="box")
+                selector.NumberSelectorConfig(min=0, max=100, step=0.00001, mode="box")
             )
     return vol.Schema(schema_dict)
 
@@ -646,7 +646,7 @@ def _build_single_window_schema(
             default=cost_val,
             description="Cost per kWh ($)",
         ): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0, max=100, step=0.01, mode="box")
+            selector.NumberSelectorConfig(min=0, max=100, step=0.00001, mode="box")
         ),
     }
     if include_delete:
