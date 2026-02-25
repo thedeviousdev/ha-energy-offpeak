@@ -172,6 +172,33 @@ class WindowData:
             ), "after_window (missing end snapshot)"
         return 0.0, "after_window (no snapshots)"
 
+    def take_late_start_snapshot(self, window_index: int) -> bool:
+        """If we're during the window with no start snapshot, use current value as start (e.g. missed event)."""
+        value = self.get_source_value()
+        if value is None:
+            return False
+        snap = self._snapshots.get(window_index) or WindowSnapshots(None, None)
+        if snap.snapshot_start is not None:
+            return False
+        now = dt_util.now()
+        current_minutes = now.hour * 60 + now.minute
+        for w in self._windows:
+            if w.index != window_index:
+                continue
+            start_min = w.start_h * 60 + w.start_m
+            end_min = w.end_h * 60 + w.end_m
+            if not (start_min <= current_minutes < end_min):
+                return False
+            if not self._snapshot_date:
+                self._snapshot_date = now.date().isoformat()
+            self._snapshots[window_index] = WindowSnapshots(
+                snapshot_start=value,
+                snapshot_end=None,
+            )
+            self._schedule_save()
+            return True
+        return False
+
     async def load(self) -> None:
         """Load snapshots from storage."""
         stored = await self._store.async_load()
@@ -369,6 +396,8 @@ class WindowEnergySensor(RestoreSensor):
         # Stable unique_id by entry + source slot + window index so entity_id is preserved
         # when the user updates the energy source (same entry, same slot, same window).
         self._attr_unique_id = f"{entry_id}_source_{source_index}_{window_index}"
+        self._last_source_value: float | None = None
+        self._last_status: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Restore state and register listeners."""
@@ -425,20 +454,28 @@ class WindowEnergySensor(RestoreSensor):
             self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Poll source and refresh displayed value for live updates."""
+        """Poll source and refresh displayed value; write only if value or status changed."""
+        old_value = self._attr_native_value
+        old_status = self._last_status
         self._update_value()
-        if self.entity_id:
+        if self.entity_id and (old_value != self._attr_native_value or old_status != self._last_status):
             self.async_write_ha_state()
 
     @callback
     def _handle_data_update(self) -> None:
+        """Update value when source entity state or snapshot data changes; write only if value/status changed."""
+        old_value = self._attr_native_value
+        old_status = self._last_status
         self._update_value()
-        if self.entity_id:
+        if self.entity_id and (old_value != self._attr_native_value or old_status != self._last_status):
             # Must run on event loop; callback can be invoked from another thread (e.g. time_change)
-            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+            self.hass.add_job(self.async_write_ha_state)
 
     def _update_value(self) -> None:
         value, status = self._data.get_window_value(self._window)
+        if status == "during_window (no snapshot)":
+            if self._data.take_late_start_snapshot(self._window.index):
+                value, status = self._data.get_window_value(self._window)
         self._attr_native_value = value
         self._attr_extra_state_attributes = {
             ATTR_SOURCE_ENTITY: self._data._source_entity,
@@ -446,3 +483,6 @@ class WindowEnergySensor(RestoreSensor):
             "start": _time_str(self._window.start_h, self._window.start_m),
             "end": _time_str(self._window.end_h, self._window.end_m),
         }
+        self._last_source_value = self._data.get_source_value()
+        self._last_status = status
+
