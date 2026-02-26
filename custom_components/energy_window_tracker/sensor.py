@@ -39,6 +39,7 @@ from .const import (
     DOMAIN,
     STORAGE_KEY,
     STORAGE_VERSION,
+    source_slug_from_entity_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -291,13 +292,6 @@ class WindowData:
         )
 
 
-def _source_slug(source_entity: str, source_index: int) -> str:
-    """Stable key for a source (storage and unique_id)."""
-    if source_entity:
-        return source_entity.replace(".", "_").replace(":", "_")[:64]
-    return f"source_{source_index}"
-
-
 def _get_sources_from_config(config: dict[str, Any]) -> list[dict[str, Any]]:
     """Return the single source from config (one entry = one source)."""
     raw = config.get(CONF_SOURCES)
@@ -343,7 +337,7 @@ async def async_setup_entry(
         if not windows:
             continue
 
-        slug = _source_slug(source_entity, source_index)
+        slug = source_slug_from_entity_id(source_entity, f"source_{source_index}")
         store = Store(
             hass,
             STORAGE_VERSION,
@@ -435,7 +429,7 @@ class WindowEnergySensor(RestoreSensor):
         self._data = data
         self._windows = windows
         self._is_first = is_first
-        # Name used at registration so entity_id includes source (e.g. sensor.sensor_today_load_peak).
+        # Name used at registration so entity_id includes source (e.g. sensor.today_load_peak).
         # Friendly name is set to window name only in async_added_to_hass.
         self._attr_name = f"{source_slug} {window.name}" if source_slug else window.name
         # unique_id includes source_slug so entity_id changes when the user updates the energy source.

@@ -27,6 +27,15 @@ DEFAULT_WINDOW_END = "14:00"
 STORAGE_VERSION = 1
 STORAGE_KEY = "energy_window_tracker_snapshots"
 
+
+def source_slug_from_entity_id(entity_id: str, fallback: str = "source_0") -> str:
+    """Stable slug from entity_id for storage, unique_id, and entity name. Strips domain prefix so generated entity_id does not duplicate it (e.g. sensor.today_energy_import_peak not sensor.sensor_today_energy_import_peak)."""
+    if not entity_id or not (e := entity_id.strip()):
+        return fallback
+    object_id = e.split(".", 1)[-1] if "." in e else e
+    return object_id.replace(".", "_").replace(":", "_")[:64] or fallback
+
+
 ATTR_SOURCE_ENTITY = "source_entity"
 ATTR_STATUS = "status"
 ATTR_COST = "cost"

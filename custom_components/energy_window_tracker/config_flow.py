@@ -36,6 +36,7 @@ from .const import (
     ROW_TEMPLATE_START_KEY,
     STORAGE_KEY,
     STORAGE_VERSION,
+    source_slug_from_entity_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,11 +81,6 @@ def _time_to_str(t: Any) -> str:
         return valid(str(t))
     except (TypeError, ValueError, AttributeError, KeyError):
         return "00:00"
-
-
-def _source_slug_str(entity_id: str) -> str:
-    """Stable slug from entity_id for storage/unique_id (matches sensor._source_slug)."""
-    return (entity_id or "").replace(".", "_").replace(":", "_")[:64] or "source_0"
 
 
 def _normalize_entity_selector_value(value: Any) -> str:
@@ -966,7 +962,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             current_name = src.get(CONF_NAME) or None
             self._save_source(source_entity, new_windows, source_name=current_name)
             # Remove the sensor entity for the deleted window (unique_id includes source slug)
-            unique_id = f"{self._config_entry.entry_id}_{_source_slug_str(source_entity)}_{idx}"
+            unique_id = f"{self._config_entry.entry_id}_{source_slug_from_entity_id(source_entity)}_{idx}"
             registry = er.async_get(self.hass)
             if entity_id := registry.async_get_entity_id("sensor", DOMAIN, unique_id):
                 registry.async_remove(entity_id)
@@ -1055,7 +1051,7 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
             store = Store(
                 self.hass,
                 STORAGE_VERSION,
-                f"{STORAGE_KEY}_{self._config_entry.entry_id}_{_source_slug_str(source_entity)}",
+                f"{STORAGE_KEY}_{self._config_entry.entry_id}_{source_slug_from_entity_id(source_entity)}",
             )
             await store.async_save({})
 
