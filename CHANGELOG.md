@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.3.4](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.3.3...v2.3.4) (2026-02-26)
+
+
+### Bug Fixes
+
+* sensor entity_id without duplicate domain, single source_slug, concise docs ([#146](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/146)) ([9d79bb8](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/9d79bb8830e968a98188220a372496c017ccc23f))
+
+
+### CI
+
+* run on push to any branch, PRs targeting main only ([#143](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/143)) ([01e1aae](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/01e1aae28aab182d2076b00354831b2ac565b902))
+
+
+### Miscellaneous Chores
+
+* **release-please:** add changelog sections for refactor, ci, chore, docs ([#144](https://github.com/thedeviousdev/ha-energy-window-tracker/issues/144)) ([b9ddd1a](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/b9ddd1acfc9d4d64e09f005a82581ee69fb1ca10))
+
 ## [2.3.3](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.3.2...v2.3.3) (2026-02-26)
 
 
