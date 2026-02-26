@@ -286,6 +286,37 @@ async def test_options_flow_update_source_entity_submit_remove_previous(
 
 
 @pytest.mark.asyncio
+async def test_options_flow_update_source_entity_remove_previous_unchanged_source_shows_error(
+    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry
+) -> None:
+    """Submit Update energy source with remove_previous_entities True but same source -> validation error."""
+    hass.states.async_set("sensor.today_load", "0")
+    entry = mock_config_entry
+    with patch(
+        "custom_components.energy_window_tracker.sensor.Store.async_load",
+        new_callable=AsyncMock,
+        return_value={},
+    ):
+        opts_result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            opts_result["flow_id"],
+            {"next_step_id": "source_entity"},
+        )
+        assert result["step_id"] == "source_entity"
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_SOURCE_ENTITY: "sensor.today_load",
+                CONF_NAME: "Energy",
+                "remove_previous_entities": True,
+            },
+        )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "source_entity"
+    assert result.get("errors", {}).get("base") == "remove_previous_but_source_unchanged"
+
+
+@pytest.mark.asyncio
 async def test_options_flow_update_source_entity_submit_retain_previous(
     hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry
 ) -> None:

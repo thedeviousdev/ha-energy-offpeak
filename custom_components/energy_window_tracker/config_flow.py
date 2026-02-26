@@ -1020,11 +1020,20 @@ class EnergyWindowOptionsFlow(config_entries.OptionsFlow):
                         "entry_title": existing_entry.title or defaults["entry_title"]
                     },
                 )
+            remove_previous = bool(user_input.get("remove_previous_entities"))
+            current_normalized = _normalize_entity_selector_value(source_entity) or source_entity
+            if remove_previous and new_entity == current_normalized:
+                return self.async_show_form(
+                    step_id="source_entity",
+                    data_schema=_build_source_entity_schema(
+                        source_entity, current_name, include_remove_previous=True
+                    ),
+                    errors={"base": "remove_previous_but_source_unchanged"},
+                )
             custom_name = (user_input.get(CONF_NAME) or "").strip()
             source_name = custom_name or _get_entity_friendly_name(
                 self.hass, new_entity, defaults["window_name"]
             )
-            remove_previous = bool(user_input.get("remove_previous_entities"))
 
             if remove_previous:
                 registry = er.async_get(self.hass)
