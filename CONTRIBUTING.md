@@ -67,7 +67,7 @@ ruff check custom_components/ tests/
 
 A **Test** workflow runs on every push and pull request to `main`/`master`:
 
-1. **pytest** – Runs the full test suite on Python 3.11 and 3.12.
+1. **pytest** – Runs the full test suite on Python 3.12 (per `requires-python = ">=3.12"` in pyproject.toml).
 2. **Ruff** – Lints `custom_components/` and `tests/`.
 
 **Setup:** No extra configuration is needed. Ensure the repo has Actions enabled (Settings → Actions → General → “Allow all actions”).

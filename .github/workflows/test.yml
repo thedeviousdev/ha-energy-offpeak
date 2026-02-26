@@ -13,16 +13,13 @@ jobs:
   test:
     name: pytest
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -31,10 +28,6 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
-
-      # Optional: stop after first failure (like HA docs: pytest -x)
-      # Uncomment to fail fast in CI:
-      # run: pytest tests/ -v --tb=short -x
 
   lint:
     name: Ruff
