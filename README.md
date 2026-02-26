@@ -77,3 +77,6 @@ Each integration entry has **one energy source** and can have **any number of ti
 
 **I get "Unknown error" or 400 when adding the integration.**  
 Ensure you select a sensor in Step 1. If the issue persists, restart Home Assistant and try again.
+
+**How do I get more detail when something fails?**  
+Enable debug logging for the integration: **Settings → System → Logging** → set **Logger** to `custom_components.energy_window_tracker` and **Level** to **Debug**, then reproduce the issue. Check **Settings → System → Logs** (or your log file) for lines starting with the integration name; the config flow logs step transitions and entity selector values to help trace errors.

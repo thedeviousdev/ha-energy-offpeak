@@ -74,19 +74,39 @@ def _time_to_str(t: Any) -> str:
 
 
 def _normalize_entity_selector_value(value: Any) -> str:
-    """Normalize EntitySelector result to a single entity_id string (frontend may send list)."""
+    """Normalize EntitySelector result to a single entity_id string (frontend may send list or dict)."""
     if value is None:
+        _LOGGER.debug("entity selector value: None -> ''")
         return ""
     if isinstance(value, str):
-        return value.strip()
+        out = value.strip()
+        _LOGGER.debug("entity selector value: str %r -> %r", value[:80] if len(value) > 80 else value, out)
+        return out
     if isinstance(value, list) and value:
         first = value[0]
-        return first.strip() if isinstance(first, str) else str(first).strip()
-    return str(value).strip() if value else ""
+        if isinstance(first, str):
+            out = first.strip()
+            _LOGGER.debug("entity selector value: list[str] -> %r", out)
+            return out
+        if isinstance(first, dict):
+            out = _normalize_entity_selector_value(first.get("entity_id") or first.get("id") or "")
+            _LOGGER.debug("entity selector value: list[dict] -> %r", out)
+            return out
+        out = str(first).strip()
+        _LOGGER.debug("entity selector value: list[other] -> %r", out)
+        return out
+    if isinstance(value, dict):
+        out = _normalize_entity_selector_value(value.get("entity_id") or value.get("id") or "")
+        _LOGGER.debug("entity selector value: dict -> %r", out)
+        return out
+    out = str(value).strip() if value else ""
+    _LOGGER.debug("entity selector value: type %s -> %r", type(value).__name__, out)
+    return out
 
 
 def _get_entity_friendly_name(hass: Any, entity_id: str) -> str:
     """Get friendly name for an entity, fallback to entity id or default."""
+    entity_id = _normalize_entity_selector_value(entity_id) or (entity_id if isinstance(entity_id, str) else "")
     try:
         state = hass.states.get(entity_id)
         if state:
@@ -313,17 +333,25 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.FlowResult:
         """Step 1: energy source only."""
         if user_input is not None:
-            self._source_entity = _normalize_entity_selector_value(
-                user_input.get(CONF_SOURCE_ENTITY)
-            )
+            raw = user_input.get(CONF_SOURCE_ENTITY)
+            _LOGGER.info("config flow step user: submitted keys=%s", list(user_input.keys()))
+            _LOGGER.debug("config flow step user: raw source_entity type=%s", type(raw).__name__)
+            self._source_entity = _normalize_entity_selector_value(raw)
             if not self._source_entity:
+                _LOGGER.warning("config flow step user: empty source_entity after normalize")
                 return self.async_show_form(
                     step_id="user",
                     data_schema=_build_step_user_schema(),
                     errors={"base": "source_entity_required"},
                 )
-            return await self.async_step_windows()
+            _LOGGER.info("config flow step user: source_entity=%r, proceeding to windows", self._source_entity)
+            try:
+                return await self.async_step_windows()
+            except Exception as err:
+                _LOGGER.exception("config flow step user: async_step_windows failed: %s", err)
+                raise
 
+        _LOGGER.debug("config flow step user: showing form")
         return self.async_show_form(
             step_id="user",
             data_schema=_build_step_user_schema(),
@@ -334,9 +362,15 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.FlowResult:
         """Step 2: source name and one window row."""
         errors: dict[str, str] = {}
-        source_entity = self._source_entity or ""
+        source_entity = _normalize_entity_selector_value(self._source_entity) or ""
+        _LOGGER.info(
+            "config flow step windows: user_input=%s, source_entity=%r",
+            "submitted" if user_input is not None else "None (show form)",
+            source_entity,
+        )
 
         if user_input is not None:
+            _LOGGER.debug("config flow step windows: submitted keys=%s", list(user_input.keys()))
             windows = _collect_windows_from_input(user_input, num_rows=1, use_simple_keys=True)
             if not windows:
                 errors["base"] = "at_least_one_window"
@@ -369,6 +403,12 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             source_name = (user_input.get("source_name") or "").strip() or _get_entity_friendly_name(self.hass, source_entity)
             source_name = (source_name or "Energy Window Tracker").strip()[:200]
             entry_title = source_name or "Energy Window Tracker"
+            _LOGGER.info(
+                "config flow step windows: creating entry title=%r, source=%r, windows=%s",
+                entry_title,
+                source_entity,
+                [w.get(CONF_WINDOW_NAME) for w in windows],
+            )
             # Create entry immediately so submitted values are saved
             return self.async_create_entry(
                 title=entry_title,
@@ -383,14 +423,21 @@ class EnergyWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        return self.async_show_form(
-            step_id="windows",
-            data_schema=_build_windows_schema(
+        try:
+            default_name = _get_entity_friendly_name(self.hass, source_entity)
+            _LOGGER.debug("config flow step windows: building form default_source_name=%r", default_name)
+            schema = _build_windows_schema(
                 self.hass,
                 source_entity,
-                default_source_name=_get_entity_friendly_name(self.hass, source_entity),
+                default_source_name=default_name,
                 use_simple_keys=True,
-            ),
+            )
+        except Exception as err:
+            _LOGGER.exception("config flow step windows: failed to build schema: %s", err)
+            raise
+        return self.async_show_form(
+            step_id="windows",
+            data_schema=schema,
             errors=errors,
         )
 

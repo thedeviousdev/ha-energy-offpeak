@@ -304,6 +304,7 @@ async def async_setup_entry(
     config = {**entry.data, **entry.options}
     sources = _get_sources_from_config(config)
     if not sources:
+        _LOGGER.debug("async_setup_entry: no sources in config")
         return
 
     hass.data.setdefault(DOMAIN, {})
@@ -313,10 +314,19 @@ async def async_setup_entry(
 
     for source_index, source_config in enumerate(sources):
         if not isinstance(source_config, dict):
+            _LOGGER.warning("async_setup_entry: source %s is not a dict", source_index)
             continue
         source_entity = source_config.get(CONF_SOURCE_ENTITY)
         if not source_entity:
+            _LOGGER.warning("async_setup_entry: source %s has no source_entity", source_index)
             continue
+        if not isinstance(source_entity, str):
+            _LOGGER.warning(
+                "async_setup_entry: source %s source_entity type=%s, coercing to str",
+                source_index,
+                type(source_entity).__name__,
+            )
+            source_entity = source_entity[0] if isinstance(source_entity, list) and source_entity else str(source_entity)
         source_name = source_config.get(CONF_NAME) or "Window"
         windows = _parse_windows(source_config)
         if not windows:
@@ -370,6 +380,11 @@ async def async_setup_entry(
             )
             registry.async_remove(entity_entry.entity_id)
 
+    _LOGGER.info(
+        "async_setup_entry: entry_id=%s, added %s sensor(s)",
+        entry.entry_id,
+        len(all_sensors),
+    )
     async_add_entities(all_sensors, update_before_add=True)
 
 
