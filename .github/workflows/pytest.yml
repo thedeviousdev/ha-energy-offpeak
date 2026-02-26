@@ -15,30 +15,21 @@ jobs:
     name: pytest
     runs-on: ubuntu-latest
     steps:
-      - name: Skip for release-please PR
-        if: github.head_ref == 'release-please--branches--main'
-        run: echo "Release PR — check passes without running tests"
-
       - uses: actions/checkout@v4
-        if: github.head_ref != 'release-please--branches--main'
 
       - name: Set up Python
-        if: github.head_ref != 'release-please--branches--main'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install uv
-        if: github.head_ref != 'release-please--branches--main'
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
           cache-dependency-glob: "requirements_test.txt"
 
       - name: Install dependencies
-        if: github.head_ref != 'release-please--branches--main'
         run: uv pip install --system -r requirements_test.txt
 
       - name: Run tests
-        if: github.head_ref != 'release-please--branches--main'
         run: pytest tests/ -v --tb=short
