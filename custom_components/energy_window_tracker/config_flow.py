@@ -27,6 +27,8 @@ from .const import (
     DEFAULT_WINDOW_END,
     DEFAULT_WINDOW_START,
     DOMAIN,
+    STORAGE_KEY,
+    STORAGE_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)

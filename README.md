@@ -53,14 +53,14 @@ Use **Submit**, **Select**, **Save**, or **Update** as appropriate when done.
 
 ## Sensors
 
-Each window is exposed as a sensor. The **friendly name** is the window name (e.g. "Peak"). Find entity IDs under **Settings → Devices & Services → Entities** (filter by Energy Window Tracker).
+Each window is exposed as a sensor. The **friendly name** is the window name (e.g. "Peak"). To find entity IDs: open **Settings → Devices & Services → Energy Window Tracker**, then open your device/entry and use the **Entities** tab; or go to **Settings → Devices & Services → Entities** and filter by the integration.
 
 | Attribute       | Description                                                                 |
 | --------------- | --------------------------------------------------------------------------- |
 | `source_entity` | The tracked source sensor                                                   |
 | `start` / `end` | Window times for this sensor                                                |
 | `status`        | Current mode: before_window, during_window, after_window, etc.              |
-| `cost`          | Cost so far in $ (only present if **Cost per kWh ($)** is set for the window). Equals energy (kWh) × cost per kWh. |
+| `cost`          | Cost so far in $ (only present if **Cost per kWh ($)** is set for the window). Equals energy (kWh) × cost per kWh, rounded to 2 decimal places. |
 
 Use the cost in templates or dashboards, e.g. `{{ state_attr('sensor.your_window_entity_id', 'cost') }}`.
 
@@ -75,8 +75,8 @@ The start snapshot is restored from storage, and the end snapshot is taken at th
 **How many sources and windows can I have?**  
 Each integration entry has **one energy source** and can have **any number of time windows**. You can create multiple entries that use the same sensor (e.g. different window sets). To add or change windows for an entry, use **⚙️ Configure** on that entry.
 
-**I get "Unknown error" or 400 when adding the integration.**  
-Ensure you select a sensor in Step 1. If the issue persists, restart Home Assistant and try again.
+**I get "Unknown error" or 400 when adding the integration or when updating the energy source.**  
+When adding: ensure you select a sensor in Step 1. Restart Home Assistant and try again. If it still fails, enable debug logging (see below) and check the log for the exact error and traceback.
 
 **How do I get more detail when something fails?**  
-Enable debug logging for the integration: **Settings → System → Logging** → set **Logger** to `custom_components.energy_window_tracker` and **Level** to **Debug**, then reproduce the issue. Check **Settings → System → Logs** (or your log file) for lines starting with the integration name; the config flow logs step transitions and entity selector values to help trace errors.
+Enable debug logging: **Settings → System → Logging** → set **Logger** to `custom_components.energy_window_tracker` and **Level** to **Debug**, then reproduce the issue. In **Settings → System → Logs** (or your log file), look for entries from `custom_components.energy_window_tracker`; the config flow logs step transitions and entity selector values to help trace errors.
