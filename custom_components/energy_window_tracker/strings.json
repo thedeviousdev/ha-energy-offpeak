@@ -5,7 +5,9 @@
       "user": {
         "title": "Select sensor",
         "description": "Select an energy source that resets daily (e.g. today's import)",
-        "data": { "source_entity": "Sensor" }
+        "data": {
+          "source_entity": "Sensor"
+        }
       },
       "windows": {
         "title": "Add window",
@@ -30,7 +32,9 @@
       "at_least_one_window": "At least one window is required (start time before end time).",
       "source_already_in_use": "Sensor already in use, please edit **{entry_title}**."
     },
-    "abort": { "already_configured": "This configuration is already set up." },
+    "abort": {
+      "already_configured": "This configuration is already set up."
+    },
     "defaults": {
       "entry_title": "Energy Window Tracker",
       "window_name": "Window",
@@ -41,7 +45,6 @@
     "step": {
       "init": {
         "title": "Configure Energy Window Tracker",
-        "description": "",
         "menu_options": {
           "add_window": "✚ Add new window",
           "list_windows": "✏️ Manage windows",
@@ -50,7 +53,6 @@
       },
       "manage_windows": {
         "title": "Manage windows",
-        "description": "",
         "data": {
           "window_index": "Select a window",
           "window_fallback": "Window {n}"
@@ -68,11 +70,10 @@
       },
       "source_entity": {
         "title": "Update energy source",
-        "description": "❌ Delete the previously associated windows (otherwise they will need to be manually removed)?",
         "data": {
           "source_entity": "Energy source",
           "name": "Friendly name",
-          "remove_previous_entities": "Yes"
+          "remove_previous_entities": "❌ Delete the previously associated windows (otherwise you may manually remove them)"
         },
         "submit": "Update"
       },
@@ -93,7 +94,6 @@
       },
       "edit_window": {
         "title": "Edit window",
-        "description": "",
         "data": {
           "name": "Window name",
           "start": "Start time",
