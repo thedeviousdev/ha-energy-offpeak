@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.1.0...v2.2.0) (2026-02-26)
+
+
+### Features
+
+* entity ID follows source, update energy source form with checkbox (no confirm step) ([520b143](https://github.com/thedeviousdev/ha-energy-window-tracker/commit/520b143068cc18a7472b19288059b1a13e881e36))
+
 ## [2.1.0](https://github.com/thedeviousdev/ha-energy-window-tracker/compare/v2.0.6...v2.1.0) (2026-02-26)
 
 
